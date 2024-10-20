@@ -27,7 +27,7 @@ const commandCenter = {
 const gameState = {
     resources: {
         Clay: 0,
-        // Add more resources here as needed
+        Carrot: 0  // Changed from Wheat to Carrot
     }
 };
 
@@ -58,7 +58,8 @@ class Resource {
 
 const resources = [
     new Resource("Clay", "clay.png", 600, 300, 1000),
-    new Resource("Clay", "clay.png", 600, 500, 1000)
+    new Resource("Clay", "clay.png", 600, 500, 1000),
+    new Resource("Carrot", "carrot.png", 400, 400, 1000)
 ];
 
 const zharan = {
@@ -162,14 +163,24 @@ function drawClay() {
 
 function drawZharan() {
     if (zharanImage.complete) {
-        // Draw Zharan's image
         const imageWidth = 32; // Adjust this based on your image size
         const imageHeight = 32; // Adjust this based on your image size
         ctx.drawImage(zharanImage, zharan.x - imageWidth/2, zharan.y - imageHeight/2, imageWidth, imageHeight);
         
-        // If Zharan is carrying clay, draw an indicator
+        // If Zharan is carrying resources, draw an indicator
         if (zharan.carrying.amount > 0) {
-            ctx.fillStyle = "brown";
+            let dotColor;
+            switch(zharan.carrying.type) {
+                case 'Clay':
+                    dotColor = "brown";
+                    break;
+                case 'Carrot':
+                    dotColor = "orange";
+                    break;
+                default:
+                    dotColor = "red"; // Fallback color
+            }
+            ctx.fillStyle = dotColor;
             ctx.beginPath();
             ctx.arc(zharan.x, zharan.y - imageHeight/2 - 10, 5, 0, Math.PI * 2);
             ctx.fill();
@@ -258,6 +269,8 @@ function gatherResource() {
 
 function drawGameState() {
     let y = 10;
+    const padding = 10; // Padding for left and right sides of the text
+
     for (const [resourceName, amount] of Object.entries(gameState.resources)) {
         const resourceText = `${resourceName}: ${amount}`;
         
@@ -267,7 +280,7 @@ function drawGameState() {
         
         // Create a semi-transparent background for the text
         ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-        ctx.fillRect(10, y, textWidth + 13, 34); // Moved down and right, increased height
+        ctx.fillRect(10, y, textWidth + padding * 2, 34); // Added padding to both sides
 
         // Add a text shadow for depth
         ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
@@ -281,7 +294,7 @@ function drawGameState() {
         gradient.addColorStop(1, "#FFA500");  // Orange color at the bottom
 
         ctx.fillStyle = gradient;
-        ctx.fillText(resourceText, 55, y + 20); // Moved down and right
+        ctx.fillText(resourceText, 60 + padding, y + 20); // Moved down and right
 
         // Reset shadow to prevent affecting other drawings
         ctx.shadowColor = "transparent";
@@ -350,4 +363,7 @@ backgroundImage.onerror = function() {
 
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection
+
+
+
 
