@@ -5,6 +5,10 @@ const ctx = canvas.getContext("2d");
 const backgroundImage = new Image();
 backgroundImage.src = 'grassy-background.png'; // Remove the '@' symbol
 
+// At the top of your file, add this line to create an Image object for Zharan
+const zharanImage = new Image();
+zharanImage.src = 'zharan-villager-transparent.png';
+
 const commandCenter = {
     x: 100,
     y: 100,
@@ -66,15 +70,28 @@ function drawClay() {  // Changed from drawMinerals to drawClay
 }
 
 function drawZharan() {
-    ctx.fillStyle = "red";
-    ctx.beginPath();
-    ctx.arc(zharan.x, zharan.y, zharan.radius, 0, Math.PI * 2);
-    ctx.fill();
-    if (zharan.carrying > 0) {
-        ctx.fillStyle = "cyan";
+    if (zharanImage.complete) {
+        // Draw Zharan's image
+        const imageWidth = 32; // Adjust this based on your image size
+        const imageHeight = 32; // Adjust this based on your image size
+        ctx.drawImage(zharanImage, zharan.x - imageWidth/2, zharan.y - imageHeight/2, imageWidth, imageHeight);
+        
+        // If Zharan is carrying clay, draw an indicator
+        if (zharan.carrying > 0) {
+            ctx.fillStyle = "brown";
+            ctx.beginPath();
+            ctx.arc(zharan.x, zharan.y - imageHeight/2 - 10, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else {
+        // Fallback to drawing a circle if the image hasn't loaded
+        ctx.fillStyle = "red";
         ctx.beginPath();
-        ctx.arc(zharan.x, zharan.y - 15, 5, 0, Math.PI * 2);
+        ctx.arc(zharan.x, zharan.y, zharan.radius, 0, Math.PI * 2);
         ctx.fill();
+        
+        // Add an event listener to redraw once the image loads
+        zharanImage.onload = () => requestAnimationFrame(gameLoop);
     }
 }
 
@@ -194,3 +211,6 @@ backgroundImage.onerror = function() {
     console.error("Error loading the background image");
     // You might want to set a flag here to prevent further attempts to load the image
 };
+
+// You might want to adjust Zharan's properties to account for the image size
+zharan.radius = 16; // Adjust this if needed for collision detection
