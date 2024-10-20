@@ -275,15 +275,21 @@ function drawGameState() {
 
     ctx.font = "bold 24px Arial";
 
-    for (const [resourceName, amount] of Object.entries(gameState.resources)) {
+    // First, calculate the widths of all resource texts
+    const resourceWidths = Object.entries(gameState.resources).map(([resourceName, amount]) => {
         const resourceText = `${resourceName}: ${amount}`;
-        
-        // Measure the width of the text
-        const textWidth = ctx.measureText(resourceText).width;
+        return ctx.measureText(resourceText).width;
+    });
+
+    // Find the maximum width to use for all backgrounds
+    const maxWidth = Math.max(...resourceWidths);
+
+    Object.entries(gameState.resources).forEach(([resourceName, amount], index) => {
+        const resourceText = `${resourceName}: ${amount}`;
         
         // Create a semi-transparent background for the text
         ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-        ctx.fillRect(x, y, textWidth + padding * 2, 34);
+        ctx.fillRect(x, y, maxWidth + padding * 2, 34);
 
         // Add a text shadow for depth
         ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
@@ -297,7 +303,7 @@ function drawGameState() {
         gradient.addColorStop(1, "#FFA500");  // Orange color at the bottom
 
         ctx.fillStyle = gradient;
-        ctx.fillText(resourceText, 40+ x + padding, y + 20);
+        ctx.fillText(resourceText, 50+ x + padding, y + 20);
 
         // Reset shadow to prevent affecting other drawings
         ctx.shadowColor = "transparent";
@@ -306,8 +312,8 @@ function drawGameState() {
         ctx.shadowOffsetY = 0;
 
         // Move x position for the next resource counter
-        x += textWidth + padding * 2 + spacing;
-    }
+        x += maxWidth + padding * 2 + spacing;
+    });
 }
 
 function drawGatheringProgress() {
@@ -367,6 +373,7 @@ backgroundImage.onerror = function() {
 
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection
+
 
 
 
