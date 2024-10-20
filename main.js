@@ -5,7 +5,10 @@ const commandCenter = {
     x: 100,
     y: 100,
     width: 100,
-    height: 100,
+    height: 100
+};
+
+const gameState = {
     minerals: 0
 };
 
@@ -26,12 +29,17 @@ const scv = {
     gatheringFrom: null
 };
 
+function drawBackground() {
+    ctx.fillStyle = "green";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
 function drawCommandCenter() {
     ctx.fillStyle = "blue";
     ctx.fillRect(commandCenter.x, commandCenter.y, commandCenter.width, commandCenter.height);
     ctx.fillStyle = "white";
-    ctx.font = "14px Arial";
-    ctx.fillText(`Minerals: ${commandCenter.minerals}`, commandCenter.x + 10, commandCenter.y + 20);
+    ctx.font = "18px Arial";
+    ctx.fillText(`Minerals: ${gameState.minerals}`, 10, 30);
 }
 
 function drawMinerals() {
@@ -106,7 +114,7 @@ function gatherMinerals() {
         const dy = commandCenter.y + commandCenter.height / 2 - scv.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < 30) {
-            commandCenter.minerals += scv.carrying;
+            gameState.minerals += scv.carrying;
             scv.carrying = 0;
             if (scv.gatheringFrom) {
                 scv.targetX = scv.gatheringFrom.x;
@@ -118,6 +126,7 @@ function gatherMinerals() {
 
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();  // Add this line
     drawCommandCenter();
     drawMinerals();
     drawSCV();
@@ -136,4 +145,3 @@ canvas.addEventListener("click", (event) => {
 });
 
 gameLoop();
-
