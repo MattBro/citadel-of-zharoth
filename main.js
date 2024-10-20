@@ -37,9 +37,6 @@ function drawBackground() {
 function drawCommandCenter() {
     ctx.fillStyle = "blue";
     ctx.fillRect(commandCenter.x, commandCenter.y, commandCenter.width, commandCenter.height);
-    ctx.fillStyle = "white";
-    ctx.font = "18px Arial";
-    ctx.fillText(`Minerals: ${gameState.minerals}`, 10, 30);
 }
 
 function drawMinerals() {
@@ -124,12 +121,19 @@ function gatherMinerals() {
     }
 }
 
+function drawGameState() {
+    ctx.fillStyle = "white";
+    ctx.font = "18px Arial";
+    ctx.fillText(`Minerals: ${gameState.minerals}`, 10, 30);
+}
+
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBackground();  // Add this line
+    drawBackground();
     drawCommandCenter();
     drawMinerals();
     drawSCV();
+    drawGameState();
     moveSCV();
     gatherMinerals();
     requestAnimationFrame(gameLoop);
