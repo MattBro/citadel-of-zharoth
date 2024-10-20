@@ -56,7 +56,7 @@ class Resource {
     }
 }
 
-const clayPatches = [
+const resources = [
     new Resource("Clay", "clay.png", 600, 300, 1000),
     new Resource("Clay", "clay.png", 600, 500, 1000)
 ];
@@ -74,7 +74,7 @@ const zharan = {
     targetX: null,
     targetY: null,
     gatheringFrom: null,
-    lastTargetedClay: null,
+    lastTargetedResource: null,  // Change from lastTargetedClay
     gatheringTimer: 0,
     gatheringDelay: 300 // 2 seconds at 60 FPS
 };
@@ -129,7 +129,7 @@ function drawCommandCenter() {
 
 function drawClay() {
     if (clayImage.complete) {
-        for (const clay of clayPatches) {
+        for (const clay of resources) {
             // Draw the clay image
             const imageWidth = 64;  // Adjust based on your image size
             const imageHeight = 64; // Adjust based on your image size
@@ -145,7 +145,7 @@ function drawClay() {
     } else {
         // Fallback to drawing circles if the image hasn't loaded
         ctx.fillStyle = "brown";
-        for (const clay of clayPatches) {
+        for (const clay of resources) {
             ctx.beginPath();
             ctx.arc(clay.x, clay.y, 20, 0, Math.PI * 2);
             ctx.fill();
@@ -215,6 +215,7 @@ function gatherResource() {
                 zharan.carrying.type = resource.name;
                 zharan.carrying.amount++;
                 zharan.gatheringTimer = 0;
+                // Remove the event emission from here
             }
         } else if (zharan.carrying.amount === zharan.carryCapacity || resource.amount === 0) {
             zharan.targetX = commandCenter.x + commandCenter.width / 2;
@@ -223,28 +224,14 @@ function gatherResource() {
             zharan.gatheringTimer = 0;
         }
     } else {
-        // If Zharan is at the command center and has a last targeted resource
-        if (zharan.lastTargetedClay && 
-            Math.abs(zharan.x - (commandCenter.x + commandCenter.width / 2)) < 5 &&
-            Math.abs(zharan.y - (commandCenter.y + commandCenter.height / 2)) < 5) {
-            // Check if the last targeted resource still has resources
-            if (zharan.lastTargetedClay.amount > 0) {
-                zharan.targetX = zharan.lastTargetedClay.x;
-                zharan.targetY = zharan.lastTargetedClay.y;
-            } else {
-                // If the resource is depleted, clear the last targeted resource
-                zharan.lastTargetedClay = null;
-            }
-        }
-        
         // Check if Zharan is near any resource
-        for (const resource of clayPatches) {
+        for (const resource of resources) {
             const dx = resource.x - zharan.x;
             const dy = resource.y - zharan.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance < 30 && resource.amount > 0) {
                 zharan.gatheringFrom = resource;
-                zharan.lastTargetedClay = resource;  // Remember this resource
+                zharan.lastTargetedResource = resource;  // Remember this resource
                 break;
             }
         }
@@ -255,13 +242,15 @@ function gatherResource() {
         const dy = commandCenter.y + commandCenter.height / 2 - zharan.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < 30) {
-            gameState.resources[zharan.carrying.type] += zharan.carrying.amount;
+            // Emit the event here, when Zharan returns to the command center
+            eventBus.emit('resourceGathered', { type: zharan.carrying.type, amount: zharan.carrying.amount });
+            
             zharan.carrying.amount = 0;
             zharan.carrying.type = null;
             zharan.gatheringTimer = 0; // Reset the timer
-            if (zharan.lastTargetedClay && zharan.lastTargetedClay.amount > 0) {
-                zharan.targetX = zharan.lastTargetedClay.x;
-                zharan.targetY = zharan.lastTargetedClay.y;
+            if (zharan.lastTargetedResource && zharan.lastTargetedResource.amount > 0) {
+                zharan.targetX = zharan.lastTargetedResource.x;
+                zharan.targetY = zharan.lastTargetedResource.y;
             }
         }
     }
@@ -322,9 +311,9 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
     drawCommandCenter();
-    drawClay();
+    resources.forEach(resource => resource.draw(ctx));
     drawZharan();
-    drawGatheringProgress(); // Add this line
+    drawGatheringProgress();
     drawGameState();
     moveZharan();
     gatherResource();
@@ -335,6 +324,17 @@ canvas.addEventListener("click", (event) => {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
+    
+    for (const resource of resources) {
+        const dx = resource.x - x;
+        const dy = resource.y - y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 30) {
+            zharan.lastTargetedResource = resource;
+            break;
+        }
+    }
+    
     zharan.targetX = x;
     zharan.targetY = y;
     zharan.gatheringFrom = null;
