@@ -17,7 +17,7 @@ tentImage.src = 'tent.png';
 const clayImage = new Image();
 clayImage.src = 'clay.png';
 
-const commandCenter = {
+const tent = {
     x: 100,
     y: 100,
     width: 200,  // Adjust this to match your image width
@@ -114,14 +114,14 @@ function drawBackground() {
     }
 }
 
-function drawCommandCenter() {
+function drawTent() {
     if (tentImage.complete) {
         // Draw the tent image
-        ctx.drawImage(tentImage, commandCenter.x, commandCenter.y, commandCenter.width, commandCenter.height);
+        ctx.drawImage(tentImage, tent.x, tent.y, tent.width, tent.height);
     } else {
         // Fallback to drawing a rectangle if the image hasn't loaded
         ctx.fillStyle = "brown";
-        ctx.fillRect(commandCenter.x, commandCenter.y, commandCenter.width, commandCenter.height);
+        ctx.fillRect(tent.x, tent.y, tent.width, tent.height);
         
         // Add an event listener to redraw once the image loads
         tentImage.onload = () => requestAnimationFrame(gameLoop);
@@ -229,8 +229,8 @@ function gatherResource() {
                 // Remove the event emission from here
             }
         } else if (zharan.carrying.amount === zharan.carryCapacity || resource.amount === 0) {
-            zharan.targetX = commandCenter.x + commandCenter.width / 2;
-            zharan.targetY = commandCenter.y + commandCenter.height / 2;
+            zharan.targetX = tent.x + tent.width / 2;
+            zharan.targetY = tent.y + tent.height / 2;
             zharan.gatheringFrom = null;
             zharan.gatheringTimer = 0;
         }
@@ -249,11 +249,11 @@ function gatherResource() {
     }
 
     if (zharan.carrying.amount > 0) {
-        const dx = commandCenter.x + commandCenter.width / 2 - zharan.x;
-        const dy = commandCenter.y + commandCenter.height / 2 - zharan.y;
+        const dx = tent.x + tent.width / 2 - zharan.x;
+        const dy = tent.y + tent.height / 2 - zharan.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < 30) {
-            // Emit the event here, when Zharan returns to the command center
+            // Emit the event here, when Zharan returns to the tent
             eventBus.emit('resourceGathered', { type: zharan.carrying.type, amount: zharan.carrying.amount });
             
             zharan.carrying.amount = 0;
@@ -333,7 +333,7 @@ function drawGatheringProgress() {
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
-    drawCommandCenter();
+    drawTent();
     resources.forEach(resource => resource.draw(ctx));
     drawZharan();
     drawGatheringProgress();
@@ -373,6 +373,7 @@ backgroundImage.onerror = function() {
 
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection
+
 
 
 
