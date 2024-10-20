@@ -118,7 +118,7 @@ class Unit {
 // Zharan class extending Unit
 class Zharan extends Unit {
     constructor(x, y, image) {
-        super('zharan', x, y, .5, image);
+        super('zharan', x, y, 4, image);
         this.carrying = {
             type: null,
             amount: 0
@@ -128,9 +128,19 @@ class Zharan extends Unit {
         this.lastTargetedResource = null;
         this.gatheringTimer = 0;
         this.gatheringDelay = 300;
+        this.selected = false; // Add a selected property
     }
 
     draw(ctx) {
+        // Draw the Zharan unit
+        super.draw(ctx);
+        
+        // Draw selection highlight
+        if (this.selected) {
+            ctx.strokeStyle = 'blue'; // Highlight color for selection
+            ctx.strokeRect(this.x - 16, this.y - 16, 32, 32); // Adjust size as needed
+        }
+        
         if (this.image && this.image.complete) {
             const imageWidth = 32;
             const imageHeight = 32;
@@ -180,6 +190,8 @@ class Zharan extends Unit {
         if (this.carrying.amount > 0 && 
             Math.abs(this.x - (tent.x + tent.width / 2)) < 20 && 
             Math.abs(this.y - (tent.y + tent.height / 2)) < 20) {
+                console.log("At tent, depositing resources");
+                console.log("lastTargetedResource", this.lastTargetedResource);
             // Deposit resources
             eventBus.emit('resourceGathered', { type: this.carrying.type, amount: this.carrying.amount });
             this.carrying.type = null;
@@ -195,6 +207,7 @@ class Zharan extends Unit {
         if (this.gatheringFrom) {
             this.gatheringTimer++;
             if (this.gatheringTimer >= this.gatheringDelay) {
+                this.lastTargetedResource = this.gatheringFrom;
                 const amountToGather = Math.min(this.carryCapacity - this.carrying.amount, this.gatheringFrom.amount);
                 if (amountToGather > 0) {
                     this.carrying.type = this.gatheringFrom.name;
@@ -374,34 +387,60 @@ function gameLoop() {
     drawBackground();
     drawTent();
     resources.forEach(resource => resource.draw(ctx));
+    
     gameState.units.forEach(unit => {
         unit.move();
-        unit.draw(ctx);
         if (unit instanceof Zharan) {
-            unit.gatherResource(resources, tent);
+            unit.gatherResource(resources, tent); // Call gatherResource for Zharan
         }
+        unit.draw(ctx);
     });
+    
     drawGameState();
     requestAnimationFrame(gameLoop);
 }
 
-canvas.addEventListener("click", (event) => {
+let selectedZharan = null; // Variable to keep track of the selected Zharan
+
+canvas.addEventListener('click', (event) => {
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    for (const resource of resources) {
-        const dx = resource.x - x;
-        const dy = resource.y - y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 30) {
-            zharan.lastTargetedResource = resource;
-            break;
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Check if the Zharan is clicked first
+    const clickedZharan = gameState.units.find(unit => unit instanceof Zharan && 
+        Math.abs(mouseX - unit.x) < 20 && Math.abs(mouseY - unit.y) < 20);
+
+    if (clickedZharan) {
+        console.log("Zharan clicked"); // Debugging statement
+        // Select the Zharan
+        if (selectedZharan) {
+            selectedZharan.selected = false; // Deselect previously selected Zharan
         }
+        selectedZharan = clickedZharan;
+        selectedZharan.selected = true; // Mark the clicked Zharan as selected
+        return; // Exit to prevent further checks
     }
-    
-    zharan.setTarget(x, y);
-    zharan.gatheringFrom = null;
+    console.log("No Zharan clicked"); // Debugging statement
+
+    // If a Zharan is selected, check for tent click
+    if (selectedZharan) {
+        if (isTentClicked(mouseX, mouseY)) {
+            console.log("Tent clicked while Zharan is selected, do nothing"); // Debugging statement
+            // Tent clicked while Zharan is selected, do nothing
+            return; // Exit to prevent opening the build menu
+        }
+        // Move the selected Zharan to the clicked position
+        console.log("Moving Zharan to:", mouseX, mouseY); // Debugging statement
+        selectedZharan.setTarget(mouseX, mouseY);
+        return; // Exit after moving
+    }
+
+    // If no Zharan is selected and the tent is clicked, open the build menu
+    if (isTentClicked(mouseX, mouseY)) {
+        console.log("Opening build menu"); // Debugging statement
+        openBuildMenu(mouseX, mouseY);
+    }
 });
 
 gameLoop();
@@ -415,14 +454,53 @@ backgroundImage.onerror = function() {
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection
 
+// Function to check if the tent is clicked
+function isTentClicked(mouseX, mouseY) {
+    const tentX = tent.x; // Assuming tent has x and y properties
+    const tentY = tent.y;
+    const tentWidth = tent.width; // Assuming tent has width and height properties
+    const tentHeight = tent.height;
 
+    return mouseX >= tentX && mouseX <= tentX + tentWidth &&
+           mouseY >= tentY && mouseY <= tentY + tentHeight;
+}
 
+function openBuildMenu(mouseX, mouseY) {
+    const buildMenu = document.getElementById('buildMenu');
+    buildMenu.style.left = `${mouseX}px`;
+    buildMenu.style.top = `${mouseY}px`;
+    buildMenu.style.display = 'block';
+}
 
+function closeBuildMenu() {
+    const buildMenu = document.getElementById('buildMenu');
+    buildMenu.style.display = 'none';
+}
 
+function buildStructure(type) {
+    console.log(`Building ${type}...`);
+    // Implement the logic to build the selected structure
+    // For example, you might want to create a new instance of the structure
+    closeBuildMenu(); // Close the menu after selection
+}
 
+let showBuildMenu = false; // Flag to control the visibility of the build menu
 
+function drawBuildMenu(x, y) {
+    const menuWidth = 200;
+    const menuHeight = 150;
 
+    // Draw the background for the build menu
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'; // Semi-transparent background
+    ctx.fillRect(x, y, menuWidth, menuHeight);
 
+    // Draw the menu title
+    ctx.fillStyle = 'white';
+    ctx.font = '16px Arial';
+    ctx.fillText('Build Menu', x + 10, y + 20);
 
-
-
+    // Draw build options
+    ctx.fillText('1. Build House', x + 10, y + 50);
+    ctx.fillText('2. Build Farm', x + 10, y + 80);
+    ctx.fillText('3. Cancel', x + 10, y + 110);
+}
