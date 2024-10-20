@@ -25,20 +25,51 @@ const commandCenter = {
 };
 
 const gameState = {
-    clay: 0  // Changed from minerals to clay
+    resources: {
+        Clay: 0,
+        // Add more resources here as needed
+    }
 };
 
-const clayPatches = [  // Changed from mineralPatches to clayPatches
-    { x: 600, y: 300, amount: 1000 },
-    { x: 600, y: 500, amount: 1000 }
+class Resource {
+    constructor(name, imageSrc, x, y, amount) {
+        this.name = name;
+        this.image = new Image();
+        this.image.src = imageSrc;
+        this.x = x;
+        this.y = y;
+        this.amount = amount;
+    }
+
+    draw(ctx) {
+        if (this.image.complete) {
+            const imageWidth = 64;  // Adjust based on your image size
+            const imageHeight = 64; // Adjust based on your image size
+            ctx.drawImage(this.image, this.x - imageWidth/2, this.y - imageHeight/2, imageWidth, imageHeight);
+            
+            ctx.fillStyle = "white";
+            ctx.font = "bold 16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(this.amount, this.x, this.y + imageHeight/2 + 20);
+        }
+    }
+}
+
+const clayPatches = [
+    new Resource("Clay", "clay.png", 600, 300, 1000),
+    new Resource("Clay", "clay.png", 600, 500, 1000)
 ];
 
 const zharan = {
     x: 150,
     y: 150,
     radius: 10,
-    speed: 1,
-    carrying: 0,
+    speed: .5,
+    carrying: {
+        type: null,
+        amount: 0
+    },
     carryCapacity: 1,
     targetX: null,
     targetY: null,
@@ -47,6 +78,26 @@ const zharan = {
     gatheringTimer: 0,
     gatheringDelay: 300 // 2 seconds at 60 FPS
 };
+
+const eventBus = {
+    listeners: {},
+    on(event, callback) {
+        if (!this.listeners[event]) {
+            this.listeners[event] = [];
+        }
+        this.listeners[event].push(callback);
+    },
+    emit(event, data) {
+        if (this.listeners[event]) {
+            this.listeners[event].forEach(callback => callback(data));
+        }
+    }
+};
+
+// Usage:
+eventBus.on('resourceGathered', (data) => {
+    gameState.resources[data.type] += data.amount;
+});
 
 function drawBackground() {
     // Check if the image has loaded
@@ -82,7 +133,7 @@ function drawClay() {
             // Draw the clay image
             const imageWidth = 64;  // Adjust based on your image size
             const imageHeight = 64; // Adjust based on your image size
-            ctx.drawImage(clayImage, clay.x - imageWidth/2, clay.y - imageHeight/2, imageWidth, imageHeight);
+            ctx.drawImage(clay.image, clay.x - imageWidth/2, clay.y - imageHeight/2, imageWidth, imageHeight);
             
             // Draw the amount of clay remaining
             ctx.fillStyle = "white";
@@ -117,7 +168,7 @@ function drawZharan() {
         ctx.drawImage(zharanImage, zharan.x - imageWidth/2, zharan.y - imageHeight/2, imageWidth, imageHeight);
         
         // If Zharan is carrying clay, draw an indicator
-        if (zharan.carrying > 0) {
+        if (zharan.carrying.amount > 0) {
             ctx.fillStyle = "brown";
             ctx.beginPath();
             ctx.arc(zharan.x, zharan.y - imageHeight/2 - 10, 5, 0, Math.PI * 2);
@@ -153,60 +204,60 @@ function moveZharan() {
     }
 }
 
-function gatherClay() {
+function gatherResource() {
     if (zharan.gatheringFrom) {
-        const clay = zharan.gatheringFrom;
-        if (clay.amount > 0 && zharan.carrying < zharan.carryCapacity) {
-            // Increment the gathering timer
+        const resource = zharan.gatheringFrom;
+        if (resource.amount > 0 && zharan.carrying.amount < zharan.carryCapacity) {
             zharan.gatheringTimer++;
             
-            // If the gathering delay has passed, collect clay
             if (zharan.gatheringTimer >= zharan.gatheringDelay) {
-                clay.amount--;
-                zharan.carrying++;
-                zharan.gatheringTimer = 0; // Reset the timer
+                resource.amount--;
+                zharan.carrying.type = resource.name;
+                zharan.carrying.amount++;
+                zharan.gatheringTimer = 0;
             }
-        } else if (zharan.carrying === zharan.carryCapacity || clay.amount === 0) {
+        } else if (zharan.carrying.amount === zharan.carryCapacity || resource.amount === 0) {
             zharan.targetX = commandCenter.x + commandCenter.width / 2;
             zharan.targetY = commandCenter.y + commandCenter.height / 2;
             zharan.gatheringFrom = null;
-            zharan.gatheringTimer = 0; // Reset the timer
+            zharan.gatheringTimer = 0;
         }
     } else {
-        // If Zharan is at the command center and has a last targeted clay patch
+        // If Zharan is at the command center and has a last targeted resource
         if (zharan.lastTargetedClay && 
             Math.abs(zharan.x - (commandCenter.x + commandCenter.width / 2)) < 5 &&
             Math.abs(zharan.y - (commandCenter.y + commandCenter.height / 2)) < 5) {
-            // Check if the last targeted clay patch still has clay
+            // Check if the last targeted resource still has resources
             if (zharan.lastTargetedClay.amount > 0) {
                 zharan.targetX = zharan.lastTargetedClay.x;
                 zharan.targetY = zharan.lastTargetedClay.y;
             } else {
-                // If the clay patch is empty, clear the last targeted clay
+                // If the resource is depleted, clear the last targeted resource
                 zharan.lastTargetedClay = null;
             }
         }
         
-        // Check if Zharan is near any clay patch
-        for (const clay of clayPatches) {
-            const dx = clay.x - zharan.x;
-            const dy = clay.y - zharan.y;
+        // Check if Zharan is near any resource
+        for (const resource of clayPatches) {
+            const dx = resource.x - zharan.x;
+            const dy = resource.y - zharan.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 30 && clay.amount > 0) {
-                zharan.gatheringFrom = clay;
-                zharan.lastTargetedClay = clay;  // Remember this clay patch
+            if (distance < 30 && resource.amount > 0) {
+                zharan.gatheringFrom = resource;
+                zharan.lastTargetedClay = resource;  // Remember this resource
                 break;
             }
         }
     }
 
-    if (zharan.carrying > 0) {
+    if (zharan.carrying.amount > 0) {
         const dx = commandCenter.x + commandCenter.width / 2 - zharan.x;
         const dy = commandCenter.y + commandCenter.height / 2 - zharan.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < 30) {
-            gameState.clay += zharan.carrying;
-            zharan.carrying = 0;
+            gameState.resources[zharan.carrying.type] += zharan.carrying.amount;
+            zharan.carrying.amount = 0;
+            zharan.carrying.type = null;
             zharan.gatheringTimer = 0; // Reset the timer
             if (zharan.lastTargetedClay && zharan.lastTargetedClay.amount > 0) {
                 zharan.targetX = zharan.lastTargetedClay.x;
@@ -217,35 +268,40 @@ function gatherClay() {
 }
 
 function drawGameState() {
-    const clayText = `Clay: ${gameState.clay}`;
-    
-    // Measure the width of the text
-    ctx.font = "bold 24px Arial";
-    const textWidth = ctx.measureText(clayText).width;
-    
-    // Create a semi-transparent background for the text
-    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-    ctx.fillRect(10, 10, textWidth + 13, 34); // Moved down and right, increased height
+    let y = 10;
+    for (const [resourceName, amount] of Object.entries(gameState.resources)) {
+        const resourceText = `${resourceName}: ${amount}`;
+        
+        // Measure the width of the text
+        ctx.font = "bold 24px Arial";
+        const textWidth = ctx.measureText(resourceText).width;
+        
+        // Create a semi-transparent background for the text
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillRect(10, y, textWidth + 13, 34); // Moved down and right, increased height
 
-    // Add a text shadow for depth
-    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+        // Add a text shadow for depth
+        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
 
-    // Use a gradient for the text color
-    let gradient = ctx.createLinearGradient(10, 10, 10, 40);
-    gradient.addColorStop(0, "#FFD700");  // Gold color at the top
-    gradient.addColorStop(1, "#FFA500");  // Orange color at the bottom
+        // Use a gradient for the text color
+        let gradient = ctx.createLinearGradient(10, y, 10, y + 34);
+        gradient.addColorStop(0, "#FFD700");  // Gold color at the top
+        gradient.addColorStop(1, "#FFA500");  // Orange color at the bottom
 
-    ctx.fillStyle = gradient;
-    ctx.fillText(clayText, 55, 30); // Moved down and right
+        ctx.fillStyle = gradient;
+        ctx.fillText(resourceText, 55, y + 20); // Moved down and right
 
-    // Reset shadow to prevent affecting other drawings
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
+        // Reset shadow to prevent affecting other drawings
+        ctx.shadowColor = "transparent";
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        y += 40; // Move down for the next resource
+    }
 }
 
 function drawGatheringProgress() {
@@ -271,7 +327,7 @@ function gameLoop() {
     drawGatheringProgress(); // Add this line
     drawGameState();
     moveZharan();
-    gatherClay();
+    gatherResource();
     requestAnimationFrame(gameLoop);
 }
 
@@ -294,3 +350,4 @@ backgroundImage.onerror = function() {
 
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection
+
