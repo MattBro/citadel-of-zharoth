@@ -7,7 +7,10 @@ backgroundImage.src = 'grassy-background.png'; // Remove the '@' symbol
 
 // At the top of your file, add this line to create an Image object for Zharan
 const zharanImage = new Image();
-zharanImage.src = 'zharan-villager-transparent.png';
+zharanImage.src = 'zharan.png';
+
+const knightImage = new Image();
+knightImage.src = 'knight.png';
 
 // At the top of your file, add this line to create an Image object for the tent
 const tentImage = new Image();
@@ -28,7 +31,8 @@ const gameState = {
     resources: {
         Clay: 0,
         Carrot: 0  // Changed from Wheat to Carrot
-    }
+    },
+    units: []
 };
 
 class Resource {
@@ -62,23 +66,178 @@ const resources = [
     new Resource("Carrot", "carrot.png", 400, 400, 1000)
 ];
 
-const zharan = {
-    x: 150,
-    y: 150,
-    radius: 10,
-    speed: .5,
-    carrying: {
-        type: null,
-        amount: 0
-    },
-    carryCapacity: 1,
-    targetX: null,
-    targetY: null,
-    gatheringFrom: null,
-    lastTargetedResource: null,  // Change from lastTargetedClay
-    gatheringTimer: 0,
-    gatheringDelay: 300 // 2 seconds at 60 FPS
-};
+class Unit {
+    constructor(type, x, y, speed, image) {
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        this.speed = speed;
+        this.image = image;
+        this.radius = 16;
+        this.targetX = null;
+        this.targetY = null;
+    }
+
+    move() {
+        if (this.targetX !== null && this.targetY !== null) {
+            const dx = this.targetX - this.x;
+            const dy = this.targetY - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance > this.speed) {
+                this.x += (dx / distance) * this.speed;
+                this.y += (dy / distance) * this.speed;
+            } else {
+                this.x = this.targetX;
+                this.y = this.targetY;
+                this.targetX = null;
+                this.targetY = null;
+            }
+        }
+    }
+
+    draw(ctx) {
+        if (this.image && this.image.complete) {
+            const imageWidth = 32;
+            const imageHeight = 32;
+            ctx.drawImage(this.image, this.x - imageWidth/2, this.y - imageHeight/2, imageWidth, imageHeight);
+        } else {
+            // Fallback drawing if image isn't loaded
+            ctx.fillStyle = "gray";
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    setTarget(x, y) {
+        this.targetX = x;
+        this.targetY = y;
+    }
+}
+
+// Zharan class extending Unit
+class Zharan extends Unit {
+    constructor(x, y, image) {
+        super('zharan', x, y, .5, image);
+        this.carrying = {
+            type: null,
+            amount: 0
+        };
+        this.carryCapacity = 1;
+        this.gatheringFrom = null;
+        this.lastTargetedResource = null;
+        this.gatheringTimer = 0;
+        this.gatheringDelay = 300;
+    }
+
+    draw(ctx) {
+        if (this.image && this.image.complete) {
+            const imageWidth = 32;
+            const imageHeight = 32;
+            ctx.drawImage(this.image, this.x - imageWidth/2, this.y - imageHeight/2, imageWidth, imageHeight);
+        } else {
+            // Fallback drawing if image isn't loaded
+            ctx.fillStyle = "gray";
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        if (this.carrying.amount > 0) {
+            let dotColor = this.carrying.type === 'Clay' ? "brown" : "orange";
+            ctx.fillStyle = dotColor;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y - 26, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        this.drawGatheringProgress(ctx);
+    }
+
+    drawGatheringProgress(ctx) {
+        if (this.gatheringFrom && this.gatheringTimer > 0) {
+            const progress = this.gatheringTimer / this.gatheringDelay;
+            const barWidth = 30;
+            const barHeight = 5;
+            
+            ctx.fillStyle = "black";
+            ctx.fillRect(this.x - barWidth/2, this.y - 25, barWidth, barHeight);
+            
+            ctx.fillStyle = "yellow";
+            ctx.fillRect(this.x - barWidth/2, this.y - 25, barWidth * progress, barHeight);
+        }
+    }
+
+    gatherResource(resources, tent) {
+        // If full, head to the tent
+        if (this.carrying.amount >= this.carryCapacity) {
+            this.setTarget(tent.x + tent.width / 2, tent.y + tent.height / 2);
+            this.gatheringFrom = null;
+            this.gatheringTimer = 0;
+        }
+
+        // Check if we're at the tent and carrying resources
+        if (this.carrying.amount > 0 && 
+            Math.abs(this.x - (tent.x + tent.width / 2)) < 20 && 
+            Math.abs(this.y - (tent.y + tent.height / 2)) < 20) {
+            // Deposit resources
+            eventBus.emit('resourceGathered', { type: this.carrying.type, amount: this.carrying.amount });
+            this.carrying.type = null;
+            this.carrying.amount = 0;
+            // If there's a last targeted resource, go back to it
+            if (this.lastTargetedResource) {
+                this.setTarget(this.lastTargetedResource.x, this.lastTargetedResource.y);
+            }
+            return; // Exit the method after depositing
+        }
+
+        // If we're gathering from a resource
+        if (this.gatheringFrom) {
+            this.gatheringTimer++;
+            if (this.gatheringTimer >= this.gatheringDelay) {
+                const amountToGather = Math.min(this.carryCapacity - this.carrying.amount, this.gatheringFrom.amount);
+                if (amountToGather > 0) {
+                    this.carrying.type = this.gatheringFrom.name;
+                    this.carrying.amount += amountToGather;
+                    this.gatheringFrom.amount -= amountToGather;
+                }
+                this.gatheringTimer = 0;
+
+                if (this.carrying.amount >= this.carryCapacity || this.gatheringFrom.amount <= 0) {
+                    this.gatheringFrom = null;
+                    this.setTarget(tent.x + tent.width / 2, tent.y + tent.height / 2);
+                }
+            }
+        } else if (this.carrying.amount === 0) {
+            // If we're not carrying anything, look for a resource to gather
+            for (const resource of resources) {
+                if (Math.abs(this.x - resource.x) < 20 && Math.abs(this.y - resource.y) < 20) {
+                    this.gatheringFrom = resource;
+                    this.gatheringTimer = 0;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+// Example of how to create a new unit type
+class Knight extends Unit {
+    constructor(x, y, image) {
+        super('knight', x, y, 3, image); // Knights move faster than Zharan
+        this.attackPower = 10;
+        this.health = 100;
+    }
+
+    attack(target) {
+        // Implement attack logic here
+    }
+}
+
+const zharan = new Zharan(150, 150, zharanImage);
+
+const knight = new Knight(200, 200, knightImage);
+gameState.units.push(zharan);
 
 const eventBus = {
     listeners: {},
@@ -161,112 +320,6 @@ function drawClay() {
     }
 }
 
-function drawZharan() {
-    if (zharanImage.complete) {
-        const imageWidth = 32; // Adjust this based on your image size
-        const imageHeight = 32; // Adjust this based on your image size
-        ctx.drawImage(zharanImage, zharan.x - imageWidth/2, zharan.y - imageHeight/2, imageWidth, imageHeight);
-        
-        // If Zharan is carrying resources, draw an indicator
-        if (zharan.carrying.amount > 0) {
-            let dotColor;
-            switch(zharan.carrying.type) {
-                case 'Clay':
-                    dotColor = "brown";
-                    break;
-                case 'Carrot':
-                    dotColor = "orange";
-                    break;
-                default:
-                    dotColor = "red"; // Fallback color
-            }
-            ctx.fillStyle = dotColor;
-            ctx.beginPath();
-            ctx.arc(zharan.x, zharan.y - imageHeight/2 - 10, 5, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    } else {
-        // Fallback to drawing a circle if the image hasn't loaded
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.arc(zharan.x, zharan.y, zharan.radius, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Add an event listener to redraw once the image loads
-        zharanImage.onload = () => requestAnimationFrame(gameLoop);
-    }
-}
-
-function moveZharan() {
-    if (zharan.targetX !== null && zharan.targetY !== null) {
-        const dx = zharan.targetX - zharan.x;
-        const dy = zharan.targetY - zharan.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance > zharan.speed) {
-            zharan.x += (dx / distance) * zharan.speed;
-            zharan.y += (dy / distance) * zharan.speed;
-        } else {
-            zharan.x = zharan.targetX;
-            zharan.y = zharan.targetY;
-            zharan.targetX = null;
-            zharan.targetY = null;
-        }
-    }
-}
-
-function gatherResource() {
-    if (zharan.gatheringFrom) {
-        const resource = zharan.gatheringFrom;
-        if (resource.amount > 0 && zharan.carrying.amount < zharan.carryCapacity) {
-            zharan.gatheringTimer++;
-            
-            if (zharan.gatheringTimer >= zharan.gatheringDelay) {
-                resource.amount--;
-                zharan.carrying.type = resource.name;
-                zharan.carrying.amount++;
-                zharan.gatheringTimer = 0;
-                // Remove the event emission from here
-            }
-        } else if (zharan.carrying.amount === zharan.carryCapacity || resource.amount === 0) {
-            zharan.targetX = tent.x + tent.width / 2;
-            zharan.targetY = tent.y + tent.height / 2;
-            zharan.gatheringFrom = null;
-            zharan.gatheringTimer = 0;
-        }
-    } else {
-        // Check if Zharan is near any resource
-        for (const resource of resources) {
-            const dx = resource.x - zharan.x;
-            const dy = resource.y - zharan.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 30 && resource.amount > 0) {
-                zharan.gatheringFrom = resource;
-                zharan.lastTargetedResource = resource;  // Remember this resource
-                break;
-            }
-        }
-    }
-
-    if (zharan.carrying.amount > 0) {
-        const dx = tent.x + tent.width / 2 - zharan.x;
-        const dy = tent.y + tent.height / 2 - zharan.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 30) {
-            // Emit the event here, when Zharan returns to the tent
-            eventBus.emit('resourceGathered', { type: zharan.carrying.type, amount: zharan.carrying.amount });
-            
-            zharan.carrying.amount = 0;
-            zharan.carrying.type = null;
-            zharan.gatheringTimer = 0; // Reset the timer
-            if (zharan.lastTargetedResource && zharan.lastTargetedResource.amount > 0) {
-                zharan.targetX = zharan.lastTargetedResource.x;
-                zharan.targetY = zharan.lastTargetedResource.y;
-            }
-        }
-    }
-}
-
 function drawGameState() {
     const padding = 10; // Padding for left and right sides of the text
     const spacing = 20; // Spacing between resource counters
@@ -316,30 +369,19 @@ function drawGameState() {
     });
 }
 
-function drawGatheringProgress() {
-    if (zharan.gatheringFrom && zharan.gatheringTimer > 0) {
-        const progress = zharan.gatheringTimer / zharan.gatheringDelay;
-        const barWidth = 30;
-        const barHeight = 5;
-        
-        ctx.fillStyle = "black";
-        ctx.fillRect(zharan.x - barWidth/2, zharan.y - 25, barWidth, barHeight);
-        
-        ctx.fillStyle = "yellow";
-        ctx.fillRect(zharan.x - barWidth/2, zharan.y - 25, barWidth * progress, barHeight);
-    }
-}
-
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
     drawTent();
     resources.forEach(resource => resource.draw(ctx));
-    drawZharan();
-    drawGatheringProgress();
+    gameState.units.forEach(unit => {
+        unit.move();
+        unit.draw(ctx);
+        if (unit instanceof Zharan) {
+            unit.gatherResource(resources, tent);
+        }
+    });
     drawGameState();
-    moveZharan();
-    gatherResource();
     requestAnimationFrame(gameLoop);
 }
 
@@ -358,8 +400,7 @@ canvas.addEventListener("click", (event) => {
         }
     }
     
-    zharan.targetX = x;
-    zharan.targetY = y;
+    zharan.setTarget(x, y);
     zharan.gatheringFrom = null;
 });
 
@@ -373,6 +414,11 @@ backgroundImage.onerror = function() {
 
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection
+
+
+
+
+
 
 
 
