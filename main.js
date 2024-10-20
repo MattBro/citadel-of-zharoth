@@ -268,19 +268,22 @@ function gatherResource() {
 }
 
 function drawGameState() {
-    let y = 10;
     const padding = 10; // Padding for left and right sides of the text
+    const spacing = 20; // Spacing between resource counters
+    let x = padding; // Starting x position
+    const y = 10; // Y position for all counters
+
+    ctx.font = "bold 24px Arial";
 
     for (const [resourceName, amount] of Object.entries(gameState.resources)) {
         const resourceText = `${resourceName}: ${amount}`;
         
         // Measure the width of the text
-        ctx.font = "bold 24px Arial";
         const textWidth = ctx.measureText(resourceText).width;
         
         // Create a semi-transparent background for the text
         ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-        ctx.fillRect(10, y, textWidth + padding * 2, 34); // Added padding to both sides
+        ctx.fillRect(x, y, textWidth + padding * 2, 34);
 
         // Add a text shadow for depth
         ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
@@ -289,12 +292,12 @@ function drawGameState() {
         ctx.shadowOffsetY = 2;
 
         // Use a gradient for the text color
-        let gradient = ctx.createLinearGradient(10, y, 10, y + 34);
+        let gradient = ctx.createLinearGradient(x, y, x, y + 34);
         gradient.addColorStop(0, "#FFD700");  // Gold color at the top
         gradient.addColorStop(1, "#FFA500");  // Orange color at the bottom
 
         ctx.fillStyle = gradient;
-        ctx.fillText(resourceText, 60 + padding, y + 20); // Moved down and right
+        ctx.fillText(resourceText, 40+ x + padding, y + 20);
 
         // Reset shadow to prevent affecting other drawings
         ctx.shadowColor = "transparent";
@@ -302,7 +305,8 @@ function drawGameState() {
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
 
-        y += 40; // Move down for the next resource
+        // Move x position for the next resource counter
+        x += textWidth + padding * 2 + spacing;
     }
 }
 
@@ -363,6 +367,7 @@ backgroundImage.onerror = function() {
 
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection
+
 
 
 
