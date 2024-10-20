@@ -9,11 +9,19 @@ backgroundImage.src = 'grassy-background.png'; // Remove the '@' symbol
 const zharanImage = new Image();
 zharanImage.src = 'zharan-villager-transparent.png';
 
+// At the top of your file, add this line to create an Image object for the tent
+const tentImage = new Image();
+tentImage.src = 'tent.png';
+
+// At the top of your file, add this line to create an Image object for the clay
+const clayImage = new Image();
+clayImage.src = 'clay.png';
+
 const commandCenter = {
     x: 100,
     y: 100,
-    width: 100,
-    height: 100
+    width: 200,  // Adjust this to match your image width
+    height: 200  // Adjust this to match your image height
 };
 
 const gameState = {
@@ -21,8 +29,8 @@ const gameState = {
 };
 
 const clayPatches = [  // Changed from mineralPatches to clayPatches
-    { x: 300, y: 200, amount: 1000 },
-    { x: 500, y: 400, amount: 1000 }
+    { x: 600, y: 300, amount: 1000 },
+    { x: 600, y: 500, amount: 1000 }
 ];
 
 const zharan = {
@@ -31,11 +39,13 @@ const zharan = {
     radius: 10,
     speed: 1,
     carrying: 0,
-    carryCapacity: 2,
+    carryCapacity: 1,
     targetX: null,
     targetY: null,
     gatheringFrom: null,
-    lastTargetedClay: null
+    lastTargetedClay: null,
+    gatheringTimer: 0,
+    gatheringDelay: 300 // 2 seconds at 60 FPS
 };
 
 function drawBackground() {
@@ -53,20 +63,49 @@ function drawBackground() {
 }
 
 function drawCommandCenter() {
-    ctx.fillStyle = "blue";
-    ctx.fillRect(commandCenter.x, commandCenter.y, commandCenter.width, commandCenter.height);
+    if (tentImage.complete) {
+        // Draw the tent image
+        ctx.drawImage(tentImage, commandCenter.x, commandCenter.y, commandCenter.width, commandCenter.height);
+    } else {
+        // Fallback to drawing a rectangle if the image hasn't loaded
+        ctx.fillStyle = "brown";
+        ctx.fillRect(commandCenter.x, commandCenter.y, commandCenter.width, commandCenter.height);
+        
+        // Add an event listener to redraw once the image loads
+        tentImage.onload = () => requestAnimationFrame(gameLoop);
+    }
 }
 
-function drawClay() {  // Changed from drawMinerals to drawClay
-    ctx.fillStyle = "brown";  // Changed color to brown for clay
-    for (const clay of clayPatches) {
-        ctx.beginPath();
-        ctx.arc(clay.x, clay.y, 20, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "white";  // Changed to white for better contrast
-        ctx.font = "12px Arial";
-        ctx.fillText(clay.amount, clay.x - 15, clay.y + 5);
-        ctx.fillStyle = "brown";  // Reset to brown
+function drawClay() {
+    if (clayImage.complete) {
+        for (const clay of clayPatches) {
+            // Draw the clay image
+            const imageWidth = 64;  // Adjust based on your image size
+            const imageHeight = 64; // Adjust based on your image size
+            ctx.drawImage(clayImage, clay.x - imageWidth/2, clay.y - imageHeight/2, imageWidth, imageHeight);
+            
+            // Draw the amount of clay remaining
+            ctx.fillStyle = "white";
+            ctx.font = "bold 16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(clay.amount, clay.x, clay.y + imageHeight/2 + 20);
+        }
+    } else {
+        // Fallback to drawing circles if the image hasn't loaded
+        ctx.fillStyle = "brown";
+        for (const clay of clayPatches) {
+            ctx.beginPath();
+            ctx.arc(clay.x, clay.y, 20, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "white";
+            ctx.font = "12px Arial";
+            ctx.fillText(clay.amount, clay.x - 15, clay.y + 5);
+            ctx.fillStyle = "brown";
+        }
+        
+        // Add an event listener to redraw once the image loads
+        clayImage.onload = () => requestAnimationFrame(gameLoop);
     }
 }
 
@@ -118,12 +157,20 @@ function gatherClay() {
     if (zharan.gatheringFrom) {
         const clay = zharan.gatheringFrom;
         if (clay.amount > 0 && zharan.carrying < zharan.carryCapacity) {
-            clay.amount--;
-            zharan.carrying++;
+            // Increment the gathering timer
+            zharan.gatheringTimer++;
+            
+            // If the gathering delay has passed, collect clay
+            if (zharan.gatheringTimer >= zharan.gatheringDelay) {
+                clay.amount--;
+                zharan.carrying++;
+                zharan.gatheringTimer = 0; // Reset the timer
+            }
         } else if (zharan.carrying === zharan.carryCapacity || clay.amount === 0) {
             zharan.targetX = commandCenter.x + commandCenter.width / 2;
             zharan.targetY = commandCenter.y + commandCenter.height / 2;
             zharan.gatheringFrom = null;
+            zharan.gatheringTimer = 0; // Reset the timer
         }
     } else {
         // If Zharan is at the command center and has a last targeted clay patch
@@ -160,9 +207,10 @@ function gatherClay() {
         if (distance < 30) {
             gameState.clay += zharan.carrying;
             zharan.carrying = 0;
-            if (zharan.gatheringFrom) {
-                zharan.targetX = zharan.gatheringFrom.x;
-                zharan.targetY = zharan.gatheringFrom.y;
+            zharan.gatheringTimer = 0; // Reset the timer
+            if (zharan.lastTargetedClay && zharan.lastTargetedClay.amount > 0) {
+                zharan.targetX = zharan.lastTargetedClay.x;
+                zharan.targetY = zharan.lastTargetedClay.y;
             }
         }
     }
@@ -177,7 +225,7 @@ function drawGameState() {
     
     // Create a semi-transparent background for the text
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-    ctx.fillRect(5, 5, textWidth + 20, 30); // Add some padding
+    ctx.fillRect(10, 10, textWidth + 13, 34); // Moved down and right, increased height
 
     // Add a text shadow for depth
     ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
@@ -191,7 +239,7 @@ function drawGameState() {
     gradient.addColorStop(1, "#FFA500");  // Orange color at the bottom
 
     ctx.fillStyle = gradient;
-    ctx.fillText(clayText, 10, 30);
+    ctx.fillText(clayText, 55, 30); // Moved down and right
 
     // Reset shadow to prevent affecting other drawings
     ctx.shadowColor = "transparent";
@@ -200,12 +248,27 @@ function drawGameState() {
     ctx.shadowOffsetY = 0;
 }
 
+function drawGatheringProgress() {
+    if (zharan.gatheringFrom && zharan.gatheringTimer > 0) {
+        const progress = zharan.gatheringTimer / zharan.gatheringDelay;
+        const barWidth = 30;
+        const barHeight = 5;
+        
+        ctx.fillStyle = "black";
+        ctx.fillRect(zharan.x - barWidth/2, zharan.y - 25, barWidth, barHeight);
+        
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(zharan.x - barWidth/2, zharan.y - 25, barWidth * progress, barHeight);
+    }
+}
+
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
     drawCommandCenter();
     drawClay();
     drawZharan();
+    drawGatheringProgress(); // Add this line
     drawGameState();
     moveZharan();
     gatherClay();
