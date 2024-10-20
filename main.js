@@ -29,12 +29,13 @@ const zharan = {
     x: 150,
     y: 150,
     radius: 10,
-    speed: 2,
+    speed: 1,
     carrying: 0,
-    carryCapacity: 8,
+    carryCapacity: 2,
     targetX: null,
     targetY: null,
-    gatheringFrom: null
+    gatheringFrom: null,
+    lastTargetedClay: null
 };
 
 function drawBackground() {
@@ -119,18 +120,34 @@ function gatherClay() {
         if (clay.amount > 0 && zharan.carrying < zharan.carryCapacity) {
             clay.amount--;
             zharan.carrying++;
-        } else if (zharan.carrying === zharan.carryCapacity) {
+        } else if (zharan.carrying === zharan.carryCapacity || clay.amount === 0) {
             zharan.targetX = commandCenter.x + commandCenter.width / 2;
             zharan.targetY = commandCenter.y + commandCenter.height / 2;
             zharan.gatheringFrom = null;
         }
     } else {
+        // If Zharan is at the command center and has a last targeted clay patch
+        if (zharan.lastTargetedClay && 
+            Math.abs(zharan.x - (commandCenter.x + commandCenter.width / 2)) < 5 &&
+            Math.abs(zharan.y - (commandCenter.y + commandCenter.height / 2)) < 5) {
+            // Check if the last targeted clay patch still has clay
+            if (zharan.lastTargetedClay.amount > 0) {
+                zharan.targetX = zharan.lastTargetedClay.x;
+                zharan.targetY = zharan.lastTargetedClay.y;
+            } else {
+                // If the clay patch is empty, clear the last targeted clay
+                zharan.lastTargetedClay = null;
+            }
+        }
+        
+        // Check if Zharan is near any clay patch
         for (const clay of clayPatches) {
             const dx = clay.x - zharan.x;
             const dy = clay.y - zharan.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 30) {
+            if (distance < 30 && clay.amount > 0) {
                 zharan.gatheringFrom = clay;
+                zharan.lastTargetedClay = clay;  // Remember this clay patch
                 break;
             }
         }
