@@ -20,6 +20,8 @@ tentImage.src = 'tent.png';
 const clayImage = new Image();
 clayImage.src = 'clay.png';
 
+let showBuildMenu = false; // Flag to control the visibility of the build menu
+
 const tent = {
     x: 100,
     y: 100,
@@ -118,7 +120,7 @@ class Unit {
 // Zharan class extending Unit
 class Zharan extends Unit {
     constructor(x, y, image) {
-        super('zharan', x, y, 4, image);
+        super('zharan', x, y, 1, image);
         this.carrying = {
             type: null,
             amount: 0
@@ -391,16 +393,87 @@ function gameLoop() {
     gameState.units.forEach(unit => {
         unit.move();
         if (unit instanceof Zharan) {
-            unit.gatherResource(resources, tent); // Call gatherResource for Zharan
+            unit.gatherResource(resources, tent);
         }
         unit.draw(ctx);
     });
     
     drawGameState();
+    drawBuildMenu(); // Add this line to draw the build menu
     requestAnimationFrame(gameLoop);
 }
 
 let selectedZharan = null; // Variable to keep track of the selected Zharan
+
+// Replace the openBuildMenu function with this
+function openBuildMenu() {
+    showBuildMenu = true;
+}
+
+function drawBuildMenu() {
+    if (!showBuildMenu) return;
+
+    const menuWidth = 200;
+    const menuHeight = 100;
+    const padding = 10;
+
+    let buildMenuX = 100;
+    let buildMenuY = 700;
+
+    // Draw menu background
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(buildMenuX, buildMenuY, menuWidth, menuHeight);
+
+    // Set text alignment to center
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Draw menu title
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('Build Menu', buildMenuX + menuWidth / 2, buildMenuY + 25);
+
+    // Draw build option
+    ctx.font = '14px Arial';
+    const knightCost = 50; // Set the cost for a knight
+    const canAffordKnight = gameState.resources.Carrot >= knightCost;
+    ctx.fillStyle = canAffordKnight ? 'white' : 'gray';
+    ctx.fillText(`Build Knight (${knightCost} Carrots)`, buildMenuX + menuWidth / 2, buildMenuY + 50);
+
+    // Draw close button
+    ctx.fillStyle = 'white';
+    ctx.fillText('Close', buildMenuX + menuWidth / 2, buildMenuY + 75);
+
+    // Reset text alignment to default for other drawing operations
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+}
+
+// Add this function to handle clicks on the build menu
+function handleBuildMenuClick(mouseX, mouseY) {
+    const menuWidth = 200;
+    const menuHeight = 100;
+    const padding = 10;
+
+    if (mouseX >= buildMenuX && mouseX <= buildMenuX + menuWidth &&
+        mouseY >= buildMenuY && mouseY <= buildMenuY + menuHeight) {
+        
+        // Check if "Build Knight" is clicked
+        if (mouseY >= buildMenuY + padding + 24 && mouseY <= buildMenuY + padding + 48) {
+            const knightCost = 50;
+            if (gameState.resources.Carrot >= knightCost) {
+                buildKnight();
+            }
+        }
+        
+        // Check if "Close" is clicked
+        if (mouseY >= buildMenuY + padding + 48) {
+            showBuildMenu = false;
+        }
+    } else {
+        showBuildMenu = false;
+    }
+}
 
 canvas.addEventListener('click', (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -439,7 +512,7 @@ canvas.addEventListener('click', (event) => {
     // If no Zharan is selected and the tent is clicked, open the build menu
     if (isTentClicked(mouseX, mouseY)) {
         console.log("Opening build menu"); // Debugging statement
-        openBuildMenu(mouseX, mouseY);
+        openBuildMenu();
     }
 });
 
@@ -465,13 +538,6 @@ function isTentClicked(mouseX, mouseY) {
            mouseY >= tentY && mouseY <= tentY + tentHeight;
 }
 
-function openBuildMenu(mouseX, mouseY) {
-    const buildMenu = document.getElementById('buildMenu');
-    buildMenu.style.left = `${mouseX}px`;
-    buildMenu.style.top = `${mouseY}px`;
-    buildMenu.style.display = 'block';
-}
-
 function closeBuildMenu() {
     const buildMenu = document.getElementById('buildMenu');
     buildMenu.style.display = 'none';
@@ -482,25 +548,4 @@ function buildStructure(type) {
     // Implement the logic to build the selected structure
     // For example, you might want to create a new instance of the structure
     closeBuildMenu(); // Close the menu after selection
-}
-
-let showBuildMenu = false; // Flag to control the visibility of the build menu
-
-function drawBuildMenu(x, y) {
-    const menuWidth = 200;
-    const menuHeight = 150;
-
-    // Draw the background for the build menu
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'; // Semi-transparent background
-    ctx.fillRect(x, y, menuWidth, menuHeight);
-
-    // Draw the menu title
-    ctx.fillStyle = 'white';
-    ctx.font = '16px Arial';
-    ctx.fillText('Build Menu', x + 10, y + 20);
-
-    // Draw build options
-    ctx.fillText('1. Build House', x + 10, y + 50);
-    ctx.fillText('2. Build Farm', x + 10, y + 80);
-    ctx.fillText('3. Cancel', x + 10, y + 110);
 }
