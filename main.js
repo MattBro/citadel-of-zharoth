@@ -249,9 +249,8 @@ class Knight extends Unit {
     }
 }
 
-const zharan = new Zharan(150, 150, zharanImage);
+const zharan = new Zharan(tent.x + tent.width/2, tent.y + tent.height, zharanImage);
 
-const knight = new Knight(200, 200, knightImage);
 gameState.units.push(zharan);
 
 const eventBus = {
@@ -409,16 +408,16 @@ let selectedZharan = null; // Variable to keep track of the selected Zharan
 function openBuildMenu() {
     showBuildMenu = true;
 }
+let buildMenuX = 100;
+let buildMenuY = 700;
 
 function drawBuildMenu() {
     if (!showBuildMenu) return;
-
+    
     const menuWidth = 200;
     const menuHeight = 100;
     const padding = 10;
-
-    let buildMenuX = 100;
-    let buildMenuY = 700;
+    
 
     // Draw menu background
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
@@ -449,8 +448,21 @@ function drawBuildMenu() {
     ctx.textBaseline = 'alphabetic';
 }
 
+function buildKnight(){
+    console.log("building knight")
+    const knight = new Knight(200, 200, knightImage);
+    gameState.units.push(knight)
+}
+
+
 // Add this function to handle clicks on the build menu
 function handleBuildMenuClick(mouseX, mouseY) {
+
+    if(!showBuildMenu)
+    {
+        return
+    }
+
     const menuWidth = 200;
     const menuHeight = 100;
     const padding = 10;
@@ -460,7 +472,7 @@ function handleBuildMenuClick(mouseX, mouseY) {
         
         // Check if "Build Knight" is clicked
         if (mouseY >= buildMenuY + padding + 24 && mouseY <= buildMenuY + padding + 48) {
-            const knightCost = 50;
+            const knightCost = 1;
             if (gameState.resources.Carrot >= knightCost) {
                 buildKnight();
             }
@@ -471,15 +483,35 @@ function handleBuildMenuClick(mouseX, mouseY) {
             showBuildMenu = false;
         }
     } else {
+        console.log("setting show build to false")
         showBuildMenu = false;
     }
 }
 
+canvas.addEventListener('contextmenu', (event) => {
+    event.preventDefault(); // Prevent the default context menu from appearing
+
+    // Get the mouse coordinates relative to the canvas
+    const rect = canvas.getBoundingClientRect(); // Get the canvas bounds
+    const mouseX = event.clientX - rect.left; // Calculate the mouse X position
+    const mouseY = event.clientY - rect.top;  // Calculate the mouse Y position
+
+    console.log("Right click detected at:", mouseX, mouseY);
+
+    // If a Zharan is selected, move it to the clicked position
+    if (selectedZharan) {
+        console.log("Moving Zharan to:", mouseX, mouseY); // Debugging statement
+        selectedZharan.setTarget(mouseX, mouseY);
+    }
+    return; // Exit after handling right-click
+});
+// Existing click event listener
 canvas.addEventListener('click', (event) => {
     const rect = canvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
 
+    console.log("Left click detected");
     // Check if the Zharan is clicked first
     const clickedZharan = gameState.units.find(unit => unit instanceof Zharan && 
         Math.abs(mouseX - unit.x) < 20 && Math.abs(mouseY - unit.y) < 20);
@@ -496,24 +528,15 @@ canvas.addEventListener('click', (event) => {
     }
     console.log("No Zharan clicked"); // Debugging statement
 
-    // If a Zharan is selected, check for tent click
-    if (selectedZharan) {
-        if (isTentClicked(mouseX, mouseY)) {
-            console.log("Tent clicked while Zharan is selected, do nothing"); // Debugging statement
-            // Tent clicked while Zharan is selected, do nothing
-            return; // Exit to prevent opening the build menu
-        }
-        // Move the selected Zharan to the clicked position
-        console.log("Moving Zharan to:", mouseX, mouseY); // Debugging statement
-        selectedZharan.setTarget(mouseX, mouseY);
-        return; // Exit after moving
-    }
+    handleBuildMenuClick(mouseX, mouseY)
 
     // If no Zharan is selected and the tent is clicked, open the build menu
     if (isTentClicked(mouseX, mouseY)) {
         console.log("Opening build menu"); // Debugging statement
         openBuildMenu();
     }
+
+    
 });
 
 gameLoop();
