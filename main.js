@@ -63,8 +63,8 @@ class Resource {
 }
 
 const resources = [
-    new Resource("Clay", "clay.png", 600, 300, 1000),
-    new Resource("Clay", "clay.png", 600, 500, 1000),
+    new Resource("clay", "clay.png", 600, 300, 1000),
+    new Resource("ironstone", "ironstone.png", 600, 500, 1000),
     new Resource("Carrot", "carrot.png", 400, 400, 1000)
 ];
 
@@ -450,7 +450,7 @@ function drawBuildMenu() {
 
 function buildKnight(){
     console.log("building knight")
-    const knight = new Knight(200, 200, knightImage);
+    const knight = new Knight(tent.x + tent.width/2, tent.y + tent.height, knightImage);
     gameState.units.push(knight)
 }
 
