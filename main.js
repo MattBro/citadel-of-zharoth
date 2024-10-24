@@ -25,8 +25,8 @@ let showBuildMenu = false; // Flag to control the visibility of the build menu
 const tent = {
     x: 100,
     y: 100,
-    width: 200,  // Adjust this to match your image width
-    height: 200  // Adjust this to match your image height
+    width: 100,  // Adjust this to match your image width
+    height: 100  // Adjust this to match your image height
 };
 
 class ResourceType {
@@ -468,11 +468,12 @@ function handleBuildMenuClick(mouseX, mouseY) {
 
     if (mouseX >= buildMenuX && mouseX <= buildMenuX + menuWidth &&
         mouseY >= buildMenuY && mouseY <= buildMenuY + menuHeight) {
-        
-        // Check if "Build Knight" is clicked
+            console.log("clicked menu")
+            
+            // Check if "Build Knight" is clicked
         if (mouseY >= buildMenuY + padding + 24 && mouseY <= buildMenuY + padding + 48) {
             const knightCost = 1;
-            if (gameState.resources.Carrot >= knightCost) {
+            if (gameState.resources.Carrot.amount >= knightCost) {
                 buildKnight();
             }
         }
