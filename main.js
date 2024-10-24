@@ -206,7 +206,7 @@ class Zharan extends Unit {
                 console.log("At tent, depositing resources");
                 console.log("lastTargetedResource", this.lastTargetedResource);
             // Deposit resources
-            eventBus.emit('resourceGathered', { type: this.carrying.type, amount: this.carrying.amount });
+            eventBus.emit('resourceGathered', { type: this.carrying.type.name, amount: this.carrying.amount });
             this.carrying.type = null;
             this.carrying.amount = 0;
             // If there's a last targeted resource, go back to it
@@ -223,7 +223,7 @@ class Zharan extends Unit {
                 this.lastTargetedResource = this.gatheringFrom;
                 const amountToGather = Math.min(this.carryCapacity - this.carrying.amount, this.gatheringFrom.amount);
                 if (amountToGather > 0) {
-                    this.carrying.type = this.gatheringFrom.resourceType.name;
+                    this.carrying.type = this.gatheringFrom.resourceType;
                     this.carrying.amount += amountToGather;
                     this.gatheringFrom.amount -= amountToGather;
                 }
