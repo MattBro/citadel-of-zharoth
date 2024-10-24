@@ -148,10 +148,26 @@ class Zharan extends Unit {
         // Draw the Zharan unit
         super.draw(ctx);
         
-        // Draw selection highlight
+       // Draw selection highlight
         if (this.selected) {
-            ctx.strokeStyle = 'blue'; // Highlight color for selection
-            ctx.strokeRect(this.x - 16, this.y - 16, 32, 32); // Adjust size as needed
+            ctx.shadowColor = 'rgba(0, 255, 255, 0.2)'; // Reduce opacity for a softer glow
+            ctx.shadowBlur = 3; // Lower blur radius for a more subtle effect
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)'; // Reduce opacity for the border
+            ctx.lineWidth = 2; // Reduce the line width slightly for a thinner border
+            ctx.beginPath(); // Start a new path for rounded rectangle
+            const radius = 10; // Set the radius for rounding corners
+            ctx.moveTo(this.x - 16 + radius, this.y - 16); // Move to the starting point
+            ctx.lineTo(this.x + 16 - radius, this.y - 16); // Top edge
+            ctx.quadraticCurveTo(this.x + 16, this.y - 16, this.x + 16, this.y - 16 + radius); // Top right corner
+            ctx.lineTo(this.x + 16, this.y + 16 - radius); // Right edge
+            ctx.quadraticCurveTo(this.x + 16, this.y + 16, this.x + 16 - radius, this.y + 16); // Bottom right corner
+            ctx.lineTo(this.x - 16 + radius, this.y + 16); // Bottom edge
+            ctx.quadraticCurveTo(this.x - 16, this.y + 16, this.x - 16, this.y + 16 - radius); // Bottom left corner
+            ctx.lineTo(this.x - 16, this.y - 16 + radius); // Left edge
+            ctx.quadraticCurveTo(this.x - 16, this.y - 16, this.x - 16 + radius, this.y - 16); // Top left corner
+            ctx.closePath(); // Close the path
+            ctx.stroke(); // Draw the border
+            ctx.shadowBlur = 0; // Reset shadow blur after drawing
         }
         
         if (this.image && this.image.complete) {
@@ -361,7 +377,6 @@ function drawGameState() {
 
         ctx.fillText(resource.amount, 50+ x + padding, y + 20);
 
-
         // Move x position for the next resource counter
         x += width + padding * 2 + spacing;
     });
@@ -556,4 +571,8 @@ function buildStructure(type) {
     // For example, you might want to create a new instance of the structure
     closeBuildMenu(); // Close the menu after selection
 }
+
+
+
+
 
