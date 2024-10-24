@@ -32,26 +32,33 @@ const tent = {
 const gameState = {
     resources: {
         Clay: 0,
-        Carrot: 0  // Changed from Wheat to Carrot
+        Carrot: 0,
+        Ironstone: 0,
     },
     units: []
 };
 
-class Resource {
-    constructor(name, imageSrc, x, y, amount) {
+class ResourceType {
+    constructor(name, imageSrc){
         this.name = name;
         this.image = new Image();
         this.image.src = imageSrc;
+    }
+}
+
+class Resource {
+    constructor(resourceType, x, y, amount) {
+        this.resourceType = resourceType;
         this.x = x;
         this.y = y;
         this.amount = amount;
     }
 
     draw(ctx) {
-        if (this.image.complete) {
+        if (this.resourceType.image.complete) {
             const imageWidth = 64;  // Adjust based on your image size
             const imageHeight = 64; // Adjust based on your image size
-            ctx.drawImage(this.image, this.x - imageWidth/2, this.y - imageHeight/2, imageWidth, imageHeight);
+            ctx.drawImage(this.resourceType.image, this.x - imageWidth/2, this.y - imageHeight/2, imageWidth, imageHeight);
             
             ctx.fillStyle = "white";
             ctx.font = "bold 16px Arial";
@@ -62,10 +69,14 @@ class Resource {
     }
 }
 
+const clayType = new ResourceType("Clay", "clay.png");
+const ironstoneType = new ResourceType("Ironstone", "ironstone.png")
+const carrotType = new ResourceType("Carrot", "carrot.png")
+
 const resources = [
-    new Resource("clay", "clay.png", 600, 300, 1000),
-    new Resource("ironstone", "ironstone.png", 600, 500, 1000),
-    new Resource("Carrot", "carrot.png", 400, 400, 1000)
+    new Resource(clayType, 600, 300, 1000),
+    new Resource(ironstoneType, 600, 500, 1000),
+    new Resource(carrotType, 400, 400, 1000)
 ];
 
 class Unit {
@@ -98,7 +109,7 @@ class Unit {
     }
 
     draw(ctx) {
-        if (this.image && this.image.complete) {
+        if (this.image?.complete) { // Use optional chaining here
             const imageWidth = 32;
             const imageHeight = 32;
             ctx.drawImage(this.image, this.x - imageWidth/2, this.y - imageHeight/2, imageWidth, imageHeight);
@@ -212,7 +223,7 @@ class Zharan extends Unit {
                 this.lastTargetedResource = this.gatheringFrom;
                 const amountToGather = Math.min(this.carryCapacity - this.carrying.amount, this.gatheringFrom.amount);
                 if (amountToGather > 0) {
-                    this.carrying.type = this.gatheringFrom.name;
+                    this.carrying.type = this.gatheringFrom.resourceType.name;
                     this.carrying.amount += amountToGather;
                     this.gatheringFrom.amount -= amountToGather;
                 }
@@ -572,3 +583,4 @@ function buildStructure(type) {
     // For example, you might want to create a new instance of the structure
     closeBuildMenu(); // Close the menu after selection
 }
+
