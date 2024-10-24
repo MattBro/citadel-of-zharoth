@@ -29,15 +29,6 @@ const tent = {
     height: 200  // Adjust this to match your image height
 };
 
-const gameState = {
-    resources: {
-        Clay: 0,
-        Carrot: 0,
-        Ironstone: 0,
-    },
-    units: []
-};
-
 class ResourceType {
     constructor(name, imageSrc){
         this.name = name;
@@ -78,6 +69,15 @@ const resources = [
     new Resource(ironstoneType, 600, 500, 1000),
     new Resource(carrotType, 400, 400, 1000)
 ];
+
+const gameState = {
+    resources: {
+        Clay: {type:clayType, amount:0},
+        Carrot: {type:carrotType, amount:0},
+        Ironstone: {type:ironstoneType, amount:0},
+    },
+    units: []
+};
 
 class Unit {
     constructor(type, x, y, speed, image) {
@@ -167,11 +167,10 @@ class Zharan extends Unit {
         }
 
         if (this.carrying.amount > 0) {
-            let dotColor = this.carrying.type === 'Clay' ? "brown" : "orange";
-            ctx.fillStyle = dotColor;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y - 26, 5, 0, Math.PI * 2);
-            ctx.fill();
+            const dotImage = this.carrying.type.image; // Get the image for the carrying type
+            if (dotImage.complete) {
+                ctx.drawImage(dotImage, this.x - 10, this.y - 36, 20, 20); // Draw the image above the Zharan's head
+            }
         }
 
         this.drawGatheringProgress(ctx);
@@ -281,7 +280,7 @@ const eventBus = {
 
 // Usage:
 eventBus.on('resourceGathered', (data) => {
-    gameState.resources[data.type] += data.amount;
+    gameState.resources[data.type].amount += data.amount;
 });
 
 function drawBackground() {
@@ -353,44 +352,18 @@ function drawGameState() {
 
     ctx.font = "bold 24px Arial";
 
-    // First, calculate the widths of all resource texts
-    const resourceWidths = Object.entries(gameState.resources).map(([resourceName, amount]) => {
-        const resourceText = `${resourceName}: ${amount}`;
-        return ctx.measureText(resourceText).width;
-    });
+    const width = 100
 
-    // Find the maximum width to use for all backgrounds
-    const maxWidth = Math.max(...resourceWidths);
+    Object.entries(gameState.resources).forEach(([resourceName, resource], index) => {
 
-    Object.entries(gameState.resources).forEach(([resourceName, amount], index) => {
-        const resourceText = `${resourceName}: ${amount}`;
-        
-        // Create a semi-transparent background for the text
-        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-        ctx.fillRect(x, y, maxWidth + padding * 2, 34);
 
-        // Add a text shadow for depth
-        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-        ctx.shadowBlur = 4;
-        ctx.shadowOffsetX = 2;
-        ctx.shadowOffsetY = 2;
+        ctx.drawImage(resource.type.image, x, y, 20, 20);
 
-        // Use a gradient for the text color
-        let gradient = ctx.createLinearGradient(x, y, x, y + 34);
-        gradient.addColorStop(0, "#FFD700");  // Gold color at the top
-        gradient.addColorStop(1, "#FFA500");  // Orange color at the bottom
+        ctx.fillText(resource.amount, 50+ x + padding, y + 20);
 
-        ctx.fillStyle = gradient;
-        ctx.fillText(resourceText, 50+ x + padding, y + 20);
-
-        // Reset shadow to prevent affecting other drawings
-        ctx.shadowColor = "transparent";
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
 
         // Move x position for the next resource counter
-        x += maxWidth + padding * 2 + spacing;
+        x += width + padding * 2 + spacing;
     });
 }
 
