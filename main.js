@@ -129,9 +129,9 @@ class Unit {
 
     drawSelectionHighlight(ctx) {
         if (this.selected) {
-            ctx.shadowColor = 'rgba(0, 255, 255, 0.3)'; // Set a softer glow color with lower opacity
-            ctx.shadowBlur = 5; // Set the blur radius for a subtle glow
-            ctx.strokeStyle = 'cyan'; // Highlight color for selection
+            ctx.shadowColor = 'rgba(0, 150, 255, 0.2)'; // Softer glow color with lower opacity
+            ctx.shadowBlur = 8; // Increase the blur radius for a more diffused glow
+            ctx.strokeStyle = 'rgba(0, 150, 255, 0.5)'; // Highlight color for selection with lower brightness
             ctx.lineWidth = 3; // Set the line width for the border
             ctx.beginPath(); // Start a new path for rounded rectangle
             const radius = 10; // Set the radius for rounding corners
@@ -582,6 +582,7 @@ function buildStructure(type) {
     // For example, you might want to create a new instance of the structure
     closeBuildMenu(); // Close the menu after selection
 }
+
 
 
 
