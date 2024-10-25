@@ -80,7 +80,7 @@ const gameState = {
 };
 
 class Unit {
-    constructor(type, x, y, speed, image) {
+    constructor(type, x, y, speed, image, selected) {
         this.type = type;
         this.x = x;
         this.y = y;
@@ -89,6 +89,7 @@ class Unit {
         this.radius = 16;
         this.targetX = null;
         this.targetY = null;
+        this.selected = false; // Add a selected property
     }
 
     move() {
@@ -109,16 +110,43 @@ class Unit {
     }
 
     draw(ctx) {
-        if (this.image?.complete) { // Use optional chaining here
+        // Draw the unit's image
+        if (this.image?.complete) {
             const imageWidth = 32;
             const imageHeight = 32;
-            ctx.drawImage(this.image, this.x - imageWidth/2, this.y - imageHeight/2, imageWidth, imageHeight);
+            ctx.drawImage(this.image, this.x - imageWidth / 2, this.y - imageHeight / 2, imageWidth, imageHeight);
         } else {
             // Fallback drawing if image isn't loaded
             ctx.fillStyle = "gray";
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
+        }
+
+        // Draw selection highlight
+        this.drawSelectionHighlight(ctx);
+    }
+
+    drawSelectionHighlight(ctx) {
+        if (this.selected) {
+            ctx.shadowColor = 'rgba(0, 255, 255, 0.3)'; // Set a softer glow color with lower opacity
+            ctx.shadowBlur = 5; // Set the blur radius for a subtle glow
+            ctx.strokeStyle = 'cyan'; // Highlight color for selection
+            ctx.lineWidth = 3; // Set the line width for the border
+            ctx.beginPath(); // Start a new path for rounded rectangle
+            const radius = 10; // Set the radius for rounding corners
+            ctx.moveTo(this.x - 16 + radius, this.y - 16); // Move to the starting point
+            ctx.lineTo(this.x + 16 - radius, this.y - 16); // Top edge
+            ctx.quadraticCurveTo(this.x + 16, this.y - 16, this.x + 16, this.y - 16 + radius); // Top right corner
+            ctx.lineTo(this.x + 16, this.y + 16 - radius); // Right edge
+            ctx.quadraticCurveTo(this.x + 16, this.y + 16, this.x + 16 - radius, this.y + 16); // Bottom right corner
+            ctx.lineTo(this.x - 16 + radius, this.y + 16); // Bottom edge
+            ctx.quadraticCurveTo(this.x - 16, this.y + 16, this.x - 16, this.y + 16 - radius); // Bottom left corner
+            ctx.lineTo(this.x - 16, this.y - 16 + radius); // Left edge
+            ctx.quadraticCurveTo(this.x - 16, this.y - 16, this.x - 16 + radius, this.y - 16); // Top left corner
+            ctx.closePath(); // Close the path
+            ctx.stroke(); // Draw the border
+            ctx.shadowBlur = 0; // Reset shadow blur after drawing
         }
     }
 
@@ -141,46 +169,11 @@ class Zharan extends Unit {
         this.lastTargetedResource = null;
         this.gatheringTimer = 0;
         this.gatheringDelay = 300;
-        this.selected = false; // Add a selected property
     }
 
     draw(ctx) {
         // Draw the Zharan unit
         super.draw(ctx);
-        
-       // Draw selection highlight
-        if (this.selected) {
-            ctx.shadowColor = 'rgba(0, 255, 255, 0.2)'; // Reduce opacity for a softer glow
-            ctx.shadowBlur = 3; // Lower blur radius for a more subtle effect
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)'; // Reduce opacity for the border
-            ctx.lineWidth = 2; // Reduce the line width slightly for a thinner border
-            ctx.beginPath(); // Start a new path for rounded rectangle
-            const radius = 10; // Set the radius for rounding corners
-            ctx.moveTo(this.x - 16 + radius, this.y - 16); // Move to the starting point
-            ctx.lineTo(this.x + 16 - radius, this.y - 16); // Top edge
-            ctx.quadraticCurveTo(this.x + 16, this.y - 16, this.x + 16, this.y - 16 + radius); // Top right corner
-            ctx.lineTo(this.x + 16, this.y + 16 - radius); // Right edge
-            ctx.quadraticCurveTo(this.x + 16, this.y + 16, this.x + 16 - radius, this.y + 16); // Bottom right corner
-            ctx.lineTo(this.x - 16 + radius, this.y + 16); // Bottom edge
-            ctx.quadraticCurveTo(this.x - 16, this.y + 16, this.x - 16, this.y + 16 - radius); // Bottom left corner
-            ctx.lineTo(this.x - 16, this.y - 16 + radius); // Left edge
-            ctx.quadraticCurveTo(this.x - 16, this.y - 16, this.x - 16 + radius, this.y - 16); // Top left corner
-            ctx.closePath(); // Close the path
-            ctx.stroke(); // Draw the border
-            ctx.shadowBlur = 0; // Reset shadow blur after drawing
-        }
-        
-        if (this.image && this.image.complete) {
-            const imageWidth = 32;
-            const imageHeight = 32;
-            ctx.drawImage(this.image, this.x - imageWidth/2, this.y - imageHeight/2, imageWidth, imageHeight);
-        } else {
-            // Fallback drawing if image isn't loaded
-            ctx.fillStyle = "gray";
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fill();
-        }
 
         if (this.carrying.amount > 0) {
             const dotImage = this.carrying.type.image; // Get the image for the carrying type
@@ -268,6 +261,11 @@ class Knight extends Unit {
         super('knight', x, y, 3, image); // Knights move faster than Zharan
         this.attackPower = 10;
         this.health = 100;
+    }
+
+    draw(ctx) {
+        // Draw the Knight unit
+        super.draw(ctx); // Call the parent draw method
     }
 
     attack(target) {
@@ -516,6 +514,10 @@ canvas.addEventListener('click', (event) => {
     const clickedZharan = gameState.units.find(unit => unit instanceof Zharan && 
         Math.abs(mouseX - unit.x) < 20 && Math.abs(mouseY - unit.y) < 20);
 
+    // Check if the Knight is clicked
+    const clickedKnight = gameState.units.find(unit => unit instanceof Knight && 
+        Math.abs(mouseX - unit.x) < 20 && Math.abs(mouseY - unit.y) < 20);
+
     if (clickedZharan) {
         console.log("Zharan clicked"); // Debugging statement
         // Select the Zharan
@@ -525,18 +527,26 @@ canvas.addEventListener('click', (event) => {
         selectedZharan = clickedZharan;
         selectedZharan.selected = true; // Mark the clicked Zharan as selected
         return; // Exit to prevent further checks
+    } else if (clickedKnight) {
+        console.log("Knight clicked"); // Debugging statement
+        // Select the Knight
+        if (selectedZharan) {
+            selectedZharan.selected = false; // Deselect previously selected Zharan
+        }
+        selectedZharan = clickedKnight; // You can reuse selectedZharan for both units
+        selectedZharan.selected = true; // Mark the clicked Knight as selected
+        return; // Exit to prevent further checks
     }
-    console.log("No Zharan clicked"); // Debugging statement
+
+    console.log("No unit clicked"); // Debugging statement
 
     handleBuildMenuClick(mouseX, mouseY)
 
-    // If no Zharan is selected and the tent is clicked, open the build menu
+    // If no unit is selected and the tent is clicked, open the build menu
     if (isTentClicked(mouseX, mouseY)) {
         console.log("Opening build menu"); // Debugging statement
         openBuildMenu();
     }
-
-    
 });
 
 gameLoop();
@@ -572,6 +582,9 @@ function buildStructure(type) {
     // For example, you might want to create a new instance of the structure
     closeBuildMenu(); // Close the menu after selection
 }
+
+
+
 
 
 
