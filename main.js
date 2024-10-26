@@ -22,12 +22,44 @@ clayImage.src = 'clay.png';
 
 let showBuildMenu = false; // Flag to control the visibility of the build menu
 
-const tent = {
-    x: 100,
-    y: 100,
-    width: 100,  // Adjust this to match your image width
-    height: 100  // Adjust this to match your image height
-};
+class GameObject {
+    constructor(x, y, width, height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
+
+    // Method to check collision with another GameObject with a buffer
+    isColliding(otherObject, buffer = 0) {
+        return !(this.x + this.width + buffer < otherObject.x ||
+                 this.x - buffer > otherObject.x + otherObject.width ||
+                 this.y + this.height + buffer < otherObject.y ||
+                 this.y - buffer > otherObject.y + otherObject.height);
+    }
+}
+
+
+
+class Tent extends GameObject {
+    constructor(x, y, width, height) {
+        super(x, y, width, height);
+        this.image = tentImage; // Assuming tentImage is defined elsewhere
+    }
+    
+    draw(ctx) {
+        if (this.image.complete) {
+            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        } else {
+            // Fallback drawing if the image isn't loaded
+            ctx.fillStyle = "brown";
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+}
+
+const tent = new Tent(100, 100, 100, 100); // Example position and size
+
 
 class ResourceType {
     constructor(name, imageSrc){
@@ -37,11 +69,10 @@ class ResourceType {
     }
 }
 
-class Resource {
+class Resource extends GameObject {
     constructor(resourceType, x, y, amount) {
+        super(x, y, 64, 64); // Example dimensions for resources
         this.resourceType = resourceType;
-        this.x = x;
-        this.y = y;
         this.amount = amount;
     }
 
@@ -79,74 +110,143 @@ const gameState = {
     units: []
 };
 
-class Unit {
+
+
+class Unit extends GameObject {
     constructor(type, x, y, speed, image, selected) {
+        super(x, y, 32, 32); // Example dimensions; adjust as needed
         this.type = type;
-        this.x = x;
-        this.y = y;
         this.speed = speed;
         this.image = image;
-        this.radius = 16;
+        this.selected = selected || false;
         this.targetX = null;
         this.targetY = null;
-        this.selected = false; // Add a selected property
     }
 
-    move() {
-        if (this.targetX !== null && this.targetY !== null) {
-            const dx = this.targetX - this.x;
-            const dy = this.targetY - this.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance > this.speed) {
-                this.x += (dx / distance) * this.speed;
-                this.y += (dy / distance) * this.speed;
-            } else {
-                this.x = this.targetX;
-                this.y = this.targetY;
-                this.targetX = null;
-                this.targetY = null;
-            }
+    move(objects) {
+        if (this.targetX === null || this.targetY === null) {
+            return;
         }
+    
+        // Calculate direction to target
+        const dx = this.targetX - this.x;
+        const dy = this.targetY - this.y;
+        const distanceToTarget = Math.sqrt(dx * dx + dy * dy);
+    
+        // If we're close enough to target, snap to it and stop
+        if (distanceToTarget < this.speed) {
+            this.x = this.targetX;
+            this.y = this.targetY;
+            this.targetX = null;
+            this.targetY = null;
+            return;
+        }
+    
+        // Calculate base movement direction
+        const normalizedDx = dx / distanceToTarget;
+        const normalizedDy = dy / distanceToTarget;
+    
+        // Initialize position changes
+        let moveX = normalizedDx * this.speed;
+        let moveY = normalizedDy * this.speed;
+    
+        // Enhanced obstacle avoidance
+        const avoidanceRadius = this.width * 1.5; // Increased radius to start avoiding earlier
+        const avoidanceStrength = 2.0; // Increased strength for stronger avoidance
+        let totalAvoidanceX = 0;
+        let totalAvoidanceY = 0;
+    
+        // Check each object for collision avoidance
+        objects.forEach(obj => {
+            if (obj === this) return; // Skip self
+    
+            // Calculate distance to object
+            const objDx = obj.x - this.x;
+            const objDy = obj.y - this.y;
+            const distanceToObj = Math.sqrt(objDx * objDx + objDy * objDy);
+            
+            // Calculate minimum safe distance (sum of both objects' radii plus buffer)
+            const safeDistance = (this.width + obj.width) / 2 + 10;  // Added 10px buffer
+    
+            // If object is within avoidance radius
+            if (distanceToObj < avoidanceRadius) {
+                // Calculate avoidance force (exponentially stronger when closer)
+                const avoidanceFactor = Math.pow((avoidanceRadius - distanceToObj) / avoidanceRadius, 2);
+                
+                // If we're very close, apply maximum avoidance
+                if (distanceToObj < safeDistance) {
+                    const emergencyStrength = 3.0;  // Stronger avoidance for imminent collisions
+                    totalAvoidanceX -= (objDx / distanceToObj) * emergencyStrength;
+                    totalAvoidanceY -= (objDy / distanceToObj) * emergencyStrength;
+                } else {
+                    // Normal avoidance behavior
+                    totalAvoidanceX -= (objDx / distanceToObj) * avoidanceFactor * avoidanceStrength;
+                    totalAvoidanceY -= (objDy / distanceToObj) * avoidanceFactor * avoidanceStrength;
+    
+                    // Add perpendicular avoidance component for smoother circulation
+                    totalAvoidanceX += (objDy / distanceToObj) * avoidanceFactor * 0.5;
+                    totalAvoidanceY += (-objDx / distanceToObj) * avoidanceFactor * 0.5;
+                }
+            }
+        });
+    
+        // Add avoidance to movement with weight balancing
+        const targetWeight = 0.7;  // Maintain some focus on target
+        const avoidanceWeight = 1.0;  // Full weight to avoidance
+        
+        moveX = (moveX * targetWeight) + (totalAvoidanceX * avoidanceWeight);
+        moveY = (moveY * targetWeight) + (totalAvoidanceY * avoidanceWeight);
+    
+        // Normalize combined movement vector if it exceeds speed
+        const moveLength = Math.sqrt(moveX * moveX + moveY * moveY);
+        if (moveLength > this.speed) {
+            moveX = (moveX / moveLength) * this.speed;
+            moveY = (moveY / moveLength) * this.speed;
+        }
+    
+        // Preview next position
+        const nextX = this.x + moveX;
+        const nextY = this.y + moveY;
+    
+        // Boundary checking
+        const margin = this.width / 2;
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+    
+        // Keep unit within canvas bounds
+        this.x = Math.max(margin, Math.min(canvasWidth - margin, nextX));
+        this.y = Math.max(margin, Math.min(canvasHeight - margin, nextY));
     }
 
     draw(ctx) {
         // Draw the unit's image
         if (this.image?.complete) {
-            const imageWidth = 32;
-            const imageHeight = 32;
-            ctx.drawImage(this.image, this.x - imageWidth / 2, this.y - imageHeight / 2, imageWidth, imageHeight);
-        } else {
-            // Fallback drawing if image isn't loaded
-            ctx.fillStyle = "gray";
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.drawImage(this.image, this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
         }
-
         // Draw selection highlight
         this.drawSelectionHighlight(ctx);
     }
 
     drawSelectionHighlight(ctx) {
         if (this.selected) {
-            ctx.shadowColor = 'rgba(0, 150, 255, 0.2)'; // Softer glow color with lower opacity
-            ctx.shadowBlur = 8; // Increase the blur radius for a more diffused glow
-            ctx.strokeStyle = 'rgba(0, 150, 255, 0.5)'; // Highlight color for selection with lower brightness
-            ctx.lineWidth = 3; // Set the line width for the border
-            ctx.beginPath(); // Start a new path for rounded rectangle
-            const radius = 10; // Set the radius for rounding corners
-            ctx.moveTo(this.x - 16 + radius, this.y - 16); // Move to the starting point
-            ctx.lineTo(this.x + 16 - radius, this.y - 16); // Top edge
-            ctx.quadraticCurveTo(this.x + 16, this.y - 16, this.x + 16, this.y - 16 + radius); // Top right corner
-            ctx.lineTo(this.x + 16, this.y + 16 - radius); // Right edge
-            ctx.quadraticCurveTo(this.x + 16, this.y + 16, this.x + 16 - radius, this.y + 16); // Bottom right corner
-            ctx.lineTo(this.x - 16 + radius, this.y + 16); // Bottom edge
-            ctx.quadraticCurveTo(this.x - 16, this.y + 16, this.x - 16, this.y + 16 - radius); // Bottom left corner
-            ctx.lineTo(this.x - 16, this.y - 16 + radius); // Left edge
-            ctx.quadraticCurveTo(this.x - 16, this.y - 16, this.x - 16 + radius, this.y - 16); // Top left corner
-            ctx.closePath(); // Close the path
-            ctx.stroke(); // Draw the border
-            ctx.shadowBlur = 0; // Reset shadow blur after drawing
+            ctx.shadowColor = 'rgba(0, 150, 255, 0.2)';
+            ctx.shadowBlur = 8;
+            ctx.strokeStyle = 'rgba(0, 150, 255, 0.5)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            const radius = 10;
+            ctx.moveTo(this.x - this.width / 2 + radius, this.y - this.height / 2);
+            ctx.lineTo(this.x + this.width / 2 - radius, this.y - this.height / 2);
+            ctx.quadraticCurveTo(this.x + this.width / 2, this.y - this.height / 2, this.x + this.width / 2, this.y - this.height / 2 + radius);
+            ctx.lineTo(this.x + this.width / 2, this.y + this.height / 2 - radius);
+            ctx.quadraticCurveTo(this.x + this.width / 2, this.y + this.height / 2, this.x + this.width / 2 - radius, this.y + this.height / 2);
+            ctx.lineTo(this.x - this.width / 2 + radius, this.y + this.height / 2);
+            ctx.quadraticCurveTo(this.x - this.width / 2, this.y + this.height / 2, this.x - this.width / 2, this.y + this.height / 2 - radius);
+            ctx.lineTo(this.x - this.width / 2, this.y - this.height / 2 + radius);
+            ctx.quadraticCurveTo(this.x - this.width / 2, this.y - this.height / 2, this.x - this.width / 2 + radius, this.y - this.height / 2);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         }
     }
 
@@ -245,7 +345,7 @@ class Zharan extends Unit {
         } else if (this.carrying.amount === 0) {
             // If we're not carrying anything, look for a resource to gather
             for (const resource of resources) {
-                if (Math.abs(this.x - resource.x) < 20 && Math.abs(this.y - resource.y) < 20) {
+                if (Math.abs(this.x - resource.x) < 50 && Math.abs(this.y - resource.y) < 50) {
                     this.gatheringFrom = resource;
                     this.gatheringTimer = 0;
                     break;
@@ -273,7 +373,7 @@ class Knight extends Unit {
     }
 }
 
-const zharan = new Zharan(tent.x + tent.width/2, tent.y + tent.height, zharanImage);
+const zharan = new Zharan(tent.x + tent.width/2, tent.y + tent.height + 20, zharanImage);
 
 gameState.units.push(zharan);
 
@@ -383,19 +483,24 @@ function drawGameState() {
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
-    drawTent();
-    resources.forEach(resource => resource.draw(ctx));
     
+    // Draw the tent
+    tent.draw(ctx); // Assuming tent is an instance of the Tent class
+
+    // Draw resources
+    resources.forEach(resource => resource.draw(ctx));
+
+    // Combine all game objects for collision detection
+    const allObjects = [...resources, ...gameState.units, tent]; // Include the tent
+
+    // Move and draw units
     gameState.units.forEach(unit => {
-        unit.move();
-        if (unit instanceof Zharan) {
-            unit.gatherResource(resources, tent);
-        }
+        unit.move(allObjects);  // Pass all objects to check for collision
         unit.draw(ctx);
     });
-    
+
     drawGameState();
-    drawBuildMenu(); // Add this line to draw the build menu
+    drawBuildMenu();
     requestAnimationFrame(gameLoop);
 }
 
@@ -582,6 +687,9 @@ function buildStructure(type) {
     // For example, you might want to create a new instance of the structure
     closeBuildMenu(); // Close the menu after selection
 }
+
+
+
 
 
 
