@@ -423,53 +423,6 @@ function drawBackground() {
     }
 }
 
-function drawTent() {
-    if (tentImage.complete) {
-        // Draw the tent image
-        ctx.drawImage(tentImage, tent.x, tent.y, tent.width, tent.height);
-    } else {
-        // Fallback to drawing a rectangle if the image hasn't loaded
-        ctx.fillStyle = "brown";
-        ctx.fillRect(tent.x, tent.y, tent.width, tent.height);
-        
-        // Add an event listener to redraw once the image loads
-        tentImage.onload = () => requestAnimationFrame(gameLoop);
-    }
-}
-
-function drawClay() {
-    if (clayImage.complete) {
-        for (const clay of resources) {
-            // Draw the clay image
-            const imageWidth = 64;  // Adjust based on your image size
-            const imageHeight = 64; // Adjust based on your image size
-            ctx.drawImage(clay.image, clay.x - imageWidth/2, clay.y - imageHeight/2, imageWidth, imageHeight);
-            
-            // Draw the amount of clay remaining
-            ctx.fillStyle = "white";
-            ctx.font = "bold 16px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(clay.amount, clay.x, clay.y + imageHeight/2 + 20);
-        }
-    } else {
-        // Fallback to drawing circles if the image hasn't loaded
-        ctx.fillStyle = "brown";
-        for (const clay of resources) {
-            ctx.beginPath();
-            ctx.arc(clay.x, clay.y, 20, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "white";
-            ctx.font = "12px Arial";
-            ctx.fillText(clay.amount, clay.x - 15, clay.y + 5);
-            ctx.fillStyle = "brown";
-        }
-        
-        // Add an event listener to redraw once the image loads
-        clayImage.onload = () => requestAnimationFrame(gameLoop);
-    }
-}
-
 function drawGameState() {
     const padding = 10; // Padding for left and right sides of the text
     const spacing = 20; // Spacing between resource counters
