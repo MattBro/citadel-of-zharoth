@@ -656,20 +656,6 @@ function isTentClicked(mouseX, mouseY) {
            mouseY >= tentY && mouseY <= tentY + tentHeight;
 }
 
-function closeBuildMenu() {
-    const buildMenu = document.getElementById('buildMenu');
-    buildMenu.style.display = 'none';
-}
-
-function buildStructure(type) {
-    console.log(`Building ${type}...`);
-    // Implement the logic to build the selected structure
-    // For example, you might want to create a new instance of the structure
-    closeBuildMenu(); // Close the menu after selection
-}
-
-
-
 
 
 
