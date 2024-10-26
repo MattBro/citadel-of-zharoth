@@ -89,6 +89,11 @@ class Resource extends GameObject {
             ctx.fillText(this.amount, this.x, this.y + imageHeight/2 + 20);
         }
     }
+
+    isPointInside(px, py) {
+        return (px >= this.x - this.width / 2 && px <= this.x + this.width / 2 &&
+                py >= this.y - this.height / 2 && py <= this.y + this.height / 2);
+    }
 }
 
 const clayType = new ResourceType("Clay", "clay.png");
@@ -132,6 +137,20 @@ class Unit extends GameObject {
         const dx = this.targetX - this.x;
         const dy = this.targetY - this.y;
         const distanceToTarget = Math.sqrt(dx * dx + dy * dy);
+
+        // Check if the unit is close enough to gather resources
+        if (this.gatheringFrom){
+            if(Math.sqrt(
+            (this.x - this.gatheringFrom.x) ** 2 + 
+            (this.y - this.gatheringFrom.y) ** 2
+            ) <= 50) { // Assuming 50 pixels is the gathering range
+                this.gatherResource(tent); // Call gatherResource if close enough
+                return
+            }
+        }
+        
+        this.dropOffResource()
+
     
         // If we're close enough to target, snap to it and stop
         if (distanceToTarget < this.speed) {
@@ -299,14 +318,7 @@ class Zharan extends Unit {
         }
     }
 
-    gatherResource(resources, tent) {
-        // If full, head to the tent
-        if (this.carrying.amount >= this.carryCapacity) {
-            this.setTarget(tent.x + tent.width / 2, tent.y + tent.height / 2);
-            this.gatheringFrom = null;
-            this.gatheringTimer = 0;
-        }
-
+    dropOffResource(){
         // Check if we're at the tent and carrying resources
         if (this.carrying.amount > 0 && 
             Math.abs(this.x - (tent.x + tent.width / 2)) < 20 && 
@@ -318,10 +330,18 @@ class Zharan extends Unit {
             this.carrying.type = null;
             this.carrying.amount = 0;
             // If there's a last targeted resource, go back to it
-            if (this.lastTargetedResource) {
+                this.gatheringFrom = this.lastTargetedResource
                 this.setTarget(this.lastTargetedResource.x, this.lastTargetedResource.y);
-            }
             return; // Exit the method after depositing
+        }
+    }
+
+    gatherResource(tent) {
+        // If full, head to the tent
+        if (this.carrying.amount >= this.carryCapacity) {
+            this.setTarget(tent.x + tent.width / 2, tent.y + tent.height / 2);
+            this.gatheringFrom = null;
+            this.gatheringTimer = 0;
         }
 
         // If we're gathering from a resource
@@ -340,15 +360,6 @@ class Zharan extends Unit {
                 if (this.carrying.amount >= this.carryCapacity || this.gatheringFrom.amount <= 0) {
                     this.gatheringFrom = null;
                     this.setTarget(tent.x + tent.width / 2, tent.y + tent.height / 2);
-                }
-            }
-        } else if (this.carrying.amount === 0) {
-            // If we're not carrying anything, look for a resource to gather
-            for (const resource of resources) {
-                if (Math.abs(this.x - resource.x) < 50 && Math.abs(this.y - resource.y) < 50) {
-                    this.gatheringFrom = resource;
-                    this.gatheringTimer = 0;
-                    break;
                 }
             }
         }
@@ -605,9 +616,24 @@ canvas.addEventListener('contextmenu', (event) => {
     if (selectedZharan) {
         console.log("Moving Zharan to:", mouseX, mouseY); // Debugging statement
         selectedZharan.setTarget(mouseX, mouseY);
+
+        for (const resource of resources) {
+            if (resource.isPointInside(mouseX, mouseY)) {
+                // Set the target for the selected unit to gather from this resource
+                if (selectedZharan) { // Assuming selectedZharan is the currently selected unit
+                    selectedZharan.gatheringFrom = resource; // Set the resource to gather from
+                    selectedZharan.lastTargetedResource = resource;
+                    selectedZharan.gatheringTimer = 0; // Reset the gathering timer
+                    console.log(`Gathering from ${resource.resourceType.name}`);
+                }
+                break; // Exit the loop once we find the clicked resource
+            }
+        }
     }
     return; // Exit after handling right-click
 });
+
+
 // Existing click event listener
 canvas.addEventListener('click', (event) => {
     const rect = canvas.getBoundingClientRect();
