@@ -149,8 +149,9 @@ class Unit extends GameObject {
             }
         }
         
-        this.dropOffResource()
 
+        if(this.dropOffResource)
+            this.dropOffResource()
     
         // If we're close enough to target, snap to it and stop
         if (distanceToTarget < this.speed) {
