@@ -3,8 +3,7 @@ import { Resource } from './classes/Resource.js';
 import { ResourceType } from './classes/ResourceType.js';
 import { Zharan } from './classes/Zharan.js';
 import { Knight } from './classes/Knight.js';
-import { gameState } from './systems/gameState.js';
-import { clayType, ironstoneType, carrotType } from './systems/gameState.js';
+import { gameState, clayType, ironstoneType, carrotType } from './systems/gameState.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
