@@ -1,8 +1,8 @@
 import { Tent } from './classes/Tent.js';
 import { Resource } from './classes/Resource.js';
 import { ResourceType } from './classes/ResourceType.js';
-import { Unit } from './classes/Unit.js';
 import { Zharan } from './classes/Zharan.js';
+import { Knight } from './classes/Knight.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -48,24 +48,6 @@ const gameState = {
     },
     units: []
 };
-
-// Example of how to create a new unit type
-class Knight extends Unit {
-    constructor(x, y, image, canvasWidth, canvasHeight) {
-        super('knight', x, y, 3, image, canvasWidth, canvasHeight); // Knights move faster than Zharan
-        this.attackPower = 10;
-        this.health = 100;
-    }
-
-    draw(ctx) {
-        // Draw the Knight unit
-        super.draw(ctx); // Call the parent draw method
-    }
-
-    attack(target) {
-        // Implement attack logic here
-    }
-}
 
 const eventBus = {
     listeners: {},
