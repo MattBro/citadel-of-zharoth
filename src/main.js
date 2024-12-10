@@ -2,6 +2,7 @@ import { Tent } from './classes/Tent.js';
 import { Resource } from './classes/Resource.js';
 import { ResourceType } from './classes/ResourceType.js';
 import { Unit } from './classes/Unit.js';
+import { Zharan } from './classes/Zharan.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -48,97 +49,6 @@ const gameState = {
     units: []
 };
 
-// Zharan class extending Unit
-class Zharan extends Unit {
-    constructor(x, y, image, canvasWidth, canvasHeight) {
-        super('zharan', x, y, 1, image, canvasWidth, canvasHeight);
-        this.carrying = {
-            type: null,
-            amount: 0
-        };
-        this.carryCapacity = 1;
-        this.gatheringFrom = null;
-        this.lastTargetedResource = null;
-        this.gatheringTimer = 0;
-        this.gatheringDelay = 300;
-    }
-
-    draw(ctx) {
-        // Draw the Zharan unit
-        super.draw(ctx);
-
-        if (this.carrying.amount > 0) {
-            const dotImage = this.carrying.type.image; // Get the image for the carrying type
-            if (dotImage.complete) {
-                ctx.drawImage(dotImage, this.x - 10, this.y - 36, 20, 20); // Draw the image above the Zharan's head
-            }
-        }
-
-        this.drawGatheringProgress(ctx);
-    }
-
-    drawGatheringProgress(ctx) {
-        if (this.gatheringFrom && this.gatheringTimer > 0) {
-            const progress = this.gatheringTimer / this.gatheringDelay;
-            const barWidth = 30;
-            const barHeight = 5;
-            
-            ctx.fillStyle = "black";
-            ctx.fillRect(this.x - barWidth/2, this.y - 25, barWidth, barHeight);
-            
-            ctx.fillStyle = "yellow";
-            ctx.fillRect(this.x - barWidth/2, this.y - 25, barWidth * progress, barHeight);
-        }
-    }
-
-    dropOffResource(){
-        // Check if we're at the tent and carrying resources
-        if (this.carrying.amount > 0 && 
-            Math.abs(this.x - (tent.x + tent.width / 2)) < 20 && 
-            Math.abs(this.y - (tent.y + tent.height / 2)) < 20) {
-                console.log("At tent, depositing resources");
-                console.log("lastTargetedResource", this.lastTargetedResource);
-            // Deposit resources
-            eventBus.emit('resourceGathered', { type: this.carrying.type.name, amount: this.carrying.amount });
-            this.carrying.type = null;
-            this.carrying.amount = 0;
-            // If there's a last targeted resource, go back to it
-                this.gatheringFrom = this.lastTargetedResource
-                this.setTarget(this.lastTargetedResource.x, this.lastTargetedResource.y);
-            return; // Exit the method after depositing
-        }
-    }
-
-    gatherResource(tent) {
-        // If full, head to the tent
-        if (this.carrying.amount >= this.carryCapacity) {
-            this.setTarget(tent.x + tent.width / 2, tent.y + tent.height / 2);
-            this.gatheringFrom = null;
-            this.gatheringTimer = 0;
-        }
-
-        // If we're gathering from a resource
-        if (this.gatheringFrom) {
-            this.gatheringTimer++;
-            if (this.gatheringTimer >= this.gatheringDelay) {
-                this.lastTargetedResource = this.gatheringFrom;
-                const amountToGather = Math.min(this.carryCapacity - this.carrying.amount, this.gatheringFrom.amount);
-                if (amountToGather > 0) {
-                    this.carrying.type = this.gatheringFrom.resourceType;
-                    this.carrying.amount += amountToGather;
-                    this.gatheringFrom.amount -= amountToGather;
-                }
-                this.gatheringTimer = 0;
-
-                if (this.carrying.amount >= this.carryCapacity || this.gatheringFrom.amount <= 0) {
-                    this.gatheringFrom = null;
-                    this.setTarget(tent.x + tent.width / 2, tent.y + tent.height / 2);
-                }
-            }
-        }
-    }
-}
-
 // Example of how to create a new unit type
 class Knight extends Unit {
     constructor(x, y, image, canvasWidth, canvasHeight) {
@@ -157,10 +67,6 @@ class Knight extends Unit {
     }
 }
 
-const zharan = new Zharan(tent.x + tent.width/2, tent.y + tent.height + 20, zharanImage, canvas.width, canvas.height);
-
-gameState.units.push(zharan);
-
 const eventBus = {
     listeners: {},
     on(event, callback) {
@@ -175,6 +81,11 @@ const eventBus = {
         }
     }
 };
+
+const zharan = new Zharan(tent.x + tent.width/2, tent.y + tent.height + 20, zharanImage, canvas.width, canvas.height, tent, eventBus);
+
+gameState.units.push(zharan);
+
 
 // Usage:
 eventBus.on('resourceGathered', (data) => {
