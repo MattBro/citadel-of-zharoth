@@ -1,7 +1,7 @@
 import { GameObject } from './GameObject.js';
 
 export class Unit extends GameObject {
-    constructor(type, x, y, speed, image, selected = false) {
+    constructor(type, x, y, speed, image, canvasWidth, canvasHeight, selected = false) {
         super(x, y, 32, 32);
         this.type = type;
         this.speed = speed;
@@ -12,6 +12,8 @@ export class Unit extends GameObject {
         this.gatheringFrom = null;
         this.gatheringTimer = 0;
         this.lastTargetedResource = null;
+        this.canvasWidth = canvasWidth;
+        this.canvasHeight = canvasHeight;
     }
 
     setTarget(x, y) {
@@ -113,8 +115,8 @@ export class Unit extends GameObject {
         
         // Keep unit within canvas bounds
         // Note: canvas needs to be passed in or accessed differently
-        this.x = Math.max(margin, Math.min(canvas.width - margin, nextX));
-        this.y = Math.max(margin, Math.min(canvas.height - margin, nextY));
+        this.x = Math.max(margin, Math.min(this.canvasWidth - margin, nextX));
+        this.y = Math.max(margin, Math.min(this.canvasHeight - margin, nextY));
     }
 
     draw(ctx) {

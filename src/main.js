@@ -1,4 +1,3 @@
-import { GameObject } from './classes/GameObject.js';
 import { Tent } from './classes/Tent.js';
 import { Resource } from './classes/Resource.js';
 import { ResourceType } from './classes/ResourceType.js';
@@ -51,8 +50,8 @@ const gameState = {
 
 // Zharan class extending Unit
 class Zharan extends Unit {
-    constructor(x, y, image) {
-        super('zharan', x, y, 1, image);
+    constructor(x, y, image, canvasWidth, canvasHeight) {
+        super('zharan', x, y, 1, image, canvasWidth, canvasHeight);
         this.carrying = {
             type: null,
             amount: 0
@@ -142,8 +141,8 @@ class Zharan extends Unit {
 
 // Example of how to create a new unit type
 class Knight extends Unit {
-    constructor(x, y, image) {
-        super('knight', x, y, 3, image); // Knights move faster than Zharan
+    constructor(x, y, image, canvasWidth, canvasHeight) {
+        super('knight', x, y, 3, image, canvasWidth, canvasHeight); // Knights move faster than Zharan
         this.attackPower = 10;
         this.health = 100;
     }
@@ -158,7 +157,7 @@ class Knight extends Unit {
     }
 }
 
-const zharan = new Zharan(tent.x + tent.width/2, tent.y + tent.height + 20, zharanImage);
+const zharan = new Zharan(tent.x + tent.width/2, tent.y + tent.height + 20, zharanImage, canvas.width, canvas.height);
 
 gameState.units.push(zharan);
 
@@ -291,7 +290,7 @@ function drawBuildMenu() {
 function buildKnight(){
     console.log("building knight")
     gameState.resources.Carrot.amount -= knightCost;
-    const knight = new Knight(tent.x + tent.width/2, tent.y + tent.height, knightImage);
+    const knight = new Knight(tent.x + tent.width/2, tent.y + tent.height, knightImage, canvas.width, canvas.height);
     gameState.units.push(knight)
 }
 
