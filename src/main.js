@@ -3,6 +3,8 @@ import { Resource } from './classes/Resource.js';
 import { ResourceType } from './classes/ResourceType.js';
 import { Zharan } from './classes/Zharan.js';
 import { Knight } from './classes/Knight.js';
+import { gameState } from './systems/gameState.js';
+import { clayType, ironstoneType, carrotType } from './systems/gameState.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -30,24 +32,11 @@ let showBuildMenu = false; // Flag to control the visibility of the build menu
 
 const tent = new Tent(100, 100, 100, 100, tentImage); // Example position and size
 
-const clayType = new ResourceType("Clay", "clay.png");
-const ironstoneType = new ResourceType("Ironstone", "ironstone.png")
-const carrotType = new ResourceType("Carrot", "carrot.png")
-
 const resources = [
     new Resource(clayType, 600, 300, 1000),
     new Resource(ironstoneType, 600, 500, 1000),
     new Resource(carrotType, 400, 400, 1000)
 ];
-
-const gameState = {
-    resources: {
-        Clay: {type:clayType, amount:0},
-        Carrot: {type:carrotType, amount:0},
-        Ironstone: {type:ironstoneType, amount:0},
-    },
-    units: []
-};
 
 const eventBus = {
     listeners: {},
