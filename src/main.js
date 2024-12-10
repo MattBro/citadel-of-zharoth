@@ -1,7 +1,7 @@
-import { GameObject } from './GameObject.js';
-import { Tent } from './Tent.js';
-import { Resource } from './Resource.js';
-import { ResourceType } from './ResourceType.js';
+import { GameObject } from './classes/GameObject.js';
+import { Tent } from './classes/Tent.js';
+import { Resource } from './classes/Resource.js';
+import { ResourceType } from './classes/ResourceType.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
