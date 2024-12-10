@@ -1,4 +1,5 @@
 import { GameObject } from './GameObject.js';
+import { Tent } from './Tent.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -24,24 +25,7 @@ clayImage.src = 'clay.png';
 
 let showBuildMenu = false; // Flag to control the visibility of the build menu
 
-class Tent extends GameObject {
-    constructor(x, y, width, height) {
-        super(x, y, width, height);
-        this.image = tentImage; // Assuming tentImage is defined elsewhere
-    }
-    
-    draw(ctx) {
-        if (this.image.complete) {
-            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-        } else {
-            // Fallback drawing if the image isn't loaded
-            ctx.fillStyle = "brown";
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-        }
-    }
-}
-
-const tent = new Tent(100, 100, 100, 100); // Example position and size
+const tent = new Tent(100, 100, 100, 100, tentImage); // Example position and size
 
 
 class ResourceType {
