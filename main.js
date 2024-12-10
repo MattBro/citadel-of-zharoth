@@ -477,6 +477,7 @@ function openBuildMenu() {
 }
 let buildMenuX = 100;
 let buildMenuY = 700;
+const knightCost = 5; // Set the cost for a knight
 
 function drawBuildMenu() {
     if (!showBuildMenu) return;
@@ -501,7 +502,6 @@ function drawBuildMenu() {
 
     // Draw build option
     ctx.font = '14px Arial';
-    const knightCost = 50; // Set the cost for a knight
     const canAffordKnight = gameState.resources.Carrot >= knightCost;
     ctx.fillStyle = canAffordKnight ? 'white' : 'gray';
     ctx.fillText(`Build Knight (${knightCost} Carrots)`, buildMenuX + menuWidth / 2, buildMenuY + 50);
@@ -517,6 +517,7 @@ function drawBuildMenu() {
 
 function buildKnight(){
     console.log("building knight")
+    gameState.resources.Carrot.amount -= knightCost;
     const knight = new Knight(tent.x + tent.width/2, tent.y + tent.height, knightImage);
     gameState.units.push(knight)
 }
@@ -525,22 +526,19 @@ function buildKnight(){
 // Add this function to handle clicks on the build menu
 function handleBuildMenuClick(mouseX, mouseY) {
 
-    if(!showBuildMenu)
-    {
-        return
+    if(!showBuildMenu) {
+        return;
     }
 
     const menuWidth = 200;
     const menuHeight = 100;
     const padding = 10;
 
-    if (mouseX >= buildMenuX && mouseX <= buildMenuX + menuWidth &&
-        mouseY >= buildMenuY && mouseY <= buildMenuY + menuHeight) {
-            console.log("clicked menu")
-            
-            // Check if "Build Knight" is clicked
+    if (isMouseInBuildMenu.call(this, mouseX, mouseY, menuWidth, menuHeight)) {
+        console.log("clicked menu");
+        
+        // Check if "Build Knight" is clicked
         if (mouseY >= buildMenuY + padding + 24 && mouseY <= buildMenuY + padding + 48) {
-            const knightCost = 1;
             if (gameState.resources.Carrot.amount >= knightCost) {
                 buildKnight();
             }
@@ -551,9 +549,14 @@ function handleBuildMenuClick(mouseX, mouseY) {
             showBuildMenu = false;
         }
     } else {
-        console.log("setting show build to false")
+        console.log("setting show build to false");
         showBuildMenu = false;
     }
+}
+
+function isMouseInBuildMenu(mouseX, mouseY, menuWidth, menuHeight) {
+    return mouseX >= buildMenuX && mouseX <= buildMenuX + menuWidth &&
+           mouseY >= buildMenuY && mouseY <= buildMenuY + menuHeight;
 }
 
 canvas.addEventListener('contextmenu', (event) => {
