@@ -33,21 +33,6 @@ const knightCost = 1; // Set the cost for a knight
 const tent = new Tent(100, 100, 100, 100, tentImage);
 gameState.tent = tent;
 
-const eventBus = {
-    listeners: {},
-    on(event, callback) {
-        if (!this.listeners[event]) {
-            this.listeners[event] = [];
-        }
-        this.listeners[event].push(callback);
-    },
-    emit(event, data) {
-        if (this.listeners[event]) {
-            this.listeners[event].forEach(callback => callback(data));
-        }
-    }
-};
-
 const zharan = new Zharan(
     gameState.tent.x + gameState.tent.width/2,
     gameState.tent.y + gameState.tent.height + 20,
@@ -55,14 +40,14 @@ const zharan = new Zharan(
     canvas.width,
     canvas.height,
     gameState.tent,
-    eventBus
+    gameState.events
 );
 
 gameState.units.push(zharan);
 
 
 // Usage:
-eventBus.on('resourceGathered', (data) => {
+gameState.events.on('resourceGathered', (data) => {
     gameState.resources[data.type].amount += data.amount;
 });
 

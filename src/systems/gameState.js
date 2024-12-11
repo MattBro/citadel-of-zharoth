@@ -5,6 +5,21 @@ export const clayType = new ResourceType("Clay", "clay.png");
 export const ironstoneType = new ResourceType("Ironstone", "ironstone.png")
 export const carrotType = new ResourceType("Carrot", "carrot.png")
 
+const eventBus = {
+    listeners: {},
+    on(event, callback) {
+        if (!this.listeners[event]) {
+            this.listeners[event] = [];
+        }
+        this.listeners[event].push(callback);
+    },
+    emit(event, data) {
+        if (this.listeners[event]) {
+            this.listeners[event].forEach(callback => callback(data));
+        }
+    }
+};
+
 export const gameState = {
     resources: {
         Clay: {type:clayType, amount:0},
@@ -27,5 +42,6 @@ export const gameState = {
                 y: 700
             }
         }
-    }
+    },
+    events: eventBus
 };
