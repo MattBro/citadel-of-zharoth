@@ -27,3 +27,34 @@ export function drawGameState() {
         x += width + padding * 2 + spacing;
     });
 }
+
+export function drawBuildMenu() {
+    if (!gameState.ui.buildMenu.isOpen) return;
+    
+    const ctx = gameState.canvas.context;
+    const menuWidth = 200;
+    const menuHeight = 100;
+    const padding = 10;
+    const { x, y } = gameState.ui.buildMenu.position;
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillRect(x, y, menuWidth, menuHeight);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText('Build Menu', x + menuWidth / 2, y + 25);
+
+    ctx.font = '14px Arial';
+    const canAffordKnight = gameState.resources.Carrot.amount >= gameState.config.costs.knight;
+    ctx.fillStyle = canAffordKnight ? 'white' : 'gray';
+    ctx.fillText(`Build Knight (${gameState.config.costs.knight} Carrots)`, x + menuWidth / 2, y + 50);
+
+    ctx.fillStyle = 'white';
+    ctx.fillText('Close', x + menuWidth / 2, y + 75);
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+}
