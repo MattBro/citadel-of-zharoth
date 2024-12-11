@@ -10,5 +10,6 @@ export const gameState = {
         Carrot: {type:carrotType, amount:0},
         Ironstone: {type:ironstoneType, amount:0},
     },
-    units: []
+    units: [],
+    selectedUnit: null
 };

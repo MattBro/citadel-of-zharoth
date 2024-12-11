@@ -3,7 +3,8 @@ import { Resource } from './classes/Resource.js';
 import { ResourceType } from './classes/ResourceType.js';
 import { Zharan } from './classes/Zharan.js';
 import { Knight } from './classes/Knight.js';
-import { gameState, clayType, ironstoneType, carrotType } from './systems/gameState.js';
+import { gameState } from './systems/gameState.js';
+import { clayType, ironstoneType, carrotType } from './systems/gameState.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -122,8 +123,6 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-let selectedZharan = null; // Variable to keep track of the selected Zharan
-
 // Replace the openBuildMenu function with this
 function openBuildMenu() {
     showBuildMenu = true;
@@ -213,34 +212,30 @@ function isMouseInBuildMenu(mouseX, mouseY, menuWidth, menuHeight) {
 }
 
 canvas.addEventListener('contextmenu', (event) => {
-    event.preventDefault(); // Prevent the default context menu from appearing
-
-    // Get the mouse coordinates relative to the canvas
-    const rect = canvas.getBoundingClientRect(); // Get the canvas bounds
-    const mouseX = event.clientX - rect.left; // Calculate the mouse X position
-    const mouseY = event.clientY - rect.top;  // Calculate the mouse Y position
+    event.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
 
     console.log("Right click detected at:", mouseX, mouseY);
 
-    // If a Zharan is selected, move it to the clicked position
-    if (selectedZharan) {
-        console.log("Moving Zharan to:", mouseX, mouseY); // Debugging statement
-        selectedZharan.setTarget(mouseX, mouseY);
+    if (gameState.selectedUnit) {
+        console.log("Moving unit to:", mouseX, mouseY);
+        gameState.selectedUnit.setTarget(mouseX, mouseY);
 
         for (const resource of resources) {
             if (resource.isPointInside(mouseX, mouseY)) {
-                // Set the target for the selected unit to gather from this resource
-                if (selectedZharan) { // Assuming selectedZharan is the currently selected unit
-                    selectedZharan.gatheringFrom = resource; // Set the resource to gather from
-                    selectedZharan.lastTargetedResource = resource;
-                    selectedZharan.gatheringTimer = 0; // Reset the gathering timer
+                if (gameState.selectedUnit) {
+                    gameState.selectedUnit.gatheringFrom = resource;
+                    gameState.selectedUnit.lastTargetedResource = resource;
+                    gameState.selectedUnit.gatheringTimer = 0;
                     console.log(`Gathering from ${resource.resourceType.name}`);
                 }
-                break; // Exit the loop once we find the clicked resource
+                break;
             }
         }
     }
-    return; // Exit after handling right-click
+    return;
 });
 
 
@@ -251,36 +246,31 @@ canvas.addEventListener('click', (event) => {
     const mouseY = event.clientY - rect.top;
 
     console.log("Left click detected");
-    // Check if the Zharan is clicked first
     const clickedZharan = gameState.units.find(unit => unit instanceof Zharan && 
         Math.abs(mouseX - unit.x) < 20 && Math.abs(mouseY - unit.y) < 20);
 
-    // Check if the Knight is clicked
     const clickedKnight = gameState.units.find(unit => unit instanceof Knight && 
         Math.abs(mouseX - unit.x) < 20 && Math.abs(mouseY - unit.y) < 20);
 
     if (clickedZharan) {
-        console.log("Zharan clicked"); // Debugging statement
-        // Select the Zharan
-        if (selectedZharan) {
-            selectedZharan.selected = false; // Deselect previously selected Zharan
+        console.log("Zharan clicked");
+        if (gameState.selectedUnit) {
+            gameState.selectedUnit.selected = false;
         }
-        selectedZharan = clickedZharan;
-        selectedZharan.selected = true; // Mark the clicked Zharan as selected
-        return; // Exit to prevent further checks
+        gameState.selectedUnit = clickedZharan;
+        gameState.selectedUnit.selected = true;
+        return;
     } else if (clickedKnight) {
-        console.log("Knight clicked"); // Debugging statement
-        // Select the Knight
-        if (selectedZharan) {
-            selectedZharan.selected = false; // Deselect previously selected Zharan
+        console.log("Knight clicked");
+        if (gameState.selectedUnit) {
+            gameState.selectedUnit.selected = false;
         }
-        selectedZharan = clickedKnight; // You can reuse selectedZharan for both units
-        selectedZharan.selected = true; // Mark the clicked Knight as selected
-        return; // Exit to prevent further checks
+        gameState.selectedUnit = clickedKnight;
+        gameState.selectedUnit.selected = true;
+        return;
     }
 
-    console.log("No unit clicked"); // Debugging statement
-
+    console.log("No unit clicked");
     handleBuildMenuClick(mouseX, mouseY)
 
     // If no unit is selected and the tent is clicked, open the build menu
