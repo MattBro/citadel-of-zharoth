@@ -30,7 +30,8 @@ clayImage.src = 'clay.png';
 
 let showBuildMenu = false; // Flag to control the visibility of the build menu
 
-const tent = new Tent(100, 100, 100, 100, tentImage); // Example position and size
+const tent = new Tent(100, 100, 100, 100, tentImage);
+gameState.tent = tent;
 
 const resources = [
     new Resource(clayType, 600, 300, 1000),
@@ -53,7 +54,15 @@ const eventBus = {
     }
 };
 
-const zharan = new Zharan(tent.x + tent.width/2, tent.y + tent.height + 20, zharanImage, canvas.width, canvas.height, tent, eventBus);
+const zharan = new Zharan(
+    gameState.tent.x + gameState.tent.width/2,
+    gameState.tent.y + gameState.tent.height + 20,
+    zharanImage,
+    canvas.width,
+    canvas.height,
+    gameState.tent,
+    eventBus
+);
 
 gameState.units.push(zharan);
 
@@ -104,13 +113,13 @@ function gameLoop() {
     drawBackground();
     
     // Draw the tent
-    tent.draw(ctx); // Assuming tent is an instance of the Tent class
+    gameState.tent.draw(ctx);
 
     // Draw resources
     resources.forEach(resource => resource.draw(ctx));
 
     // Combine all game objects for collision detection
-    const allObjects = [...resources, ...gameState.units, tent]; // Include the tent
+    const allObjects = [...resources, ...gameState.units, gameState.tent];
 
     // Move and draw units
     gameState.units.forEach(unit => {
@@ -129,7 +138,7 @@ function openBuildMenu() {
 }
 let buildMenuX = 100;
 let buildMenuY = 700;
-const knightCost = 5; // Set the cost for a knight
+const knightCost = 1; // Set the cost for a knight
 
 function drawBuildMenu() {
     if (!showBuildMenu) return;
@@ -293,10 +302,10 @@ zharan.radius = 16; // Adjust this if needed for collision detection
 
 // Function to check if the tent is clicked
 function isTentClicked(mouseX, mouseY) {
-    const tentX = tent.x; // Assuming tent has x and y properties
-    const tentY = tent.y;
-    const tentWidth = tent.width; // Assuming tent has width and height properties
-    const tentHeight = tent.height;
+    const tentX = gameState.tent.x;
+    const tentY = gameState.tent.y;
+    const tentWidth = gameState.tent.width;
+    const tentHeight = gameState.tent.height;
 
     return mouseX >= tentX && mouseX <= tentX + tentWidth &&
            mouseY >= tentY && mouseY <= tentY + tentHeight;

@@ -11,5 +11,6 @@ export const gameState = {
         Ironstone: {type:ironstoneType, amount:0},
     },
     units: [],
-    selectedUnit: null
+    selectedUnit: null,
+    tent: null
 };
