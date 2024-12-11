@@ -2,7 +2,7 @@ import { Tent } from './classes/Tent.js';
 import { Zharan } from './classes/Zharan.js';
 import { Knight } from './classes/Knight.js';
 import { gameState } from './systems/gameState.js';
-import { drawBackground, drawGameState } from './systems/renderer.js';
+import { drawBackground, drawGameState, drawBuildMenu } from './systems/renderer.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -57,41 +57,6 @@ function gameLoop() {
 // Replace the openBuildMenu function with this
 function openBuildMenu() {
     gameState.ui.buildMenu.isOpen = true;
-}
-
-function drawBuildMenu() {
-    if (!gameState.ui.buildMenu.isOpen) return;
-    
-    const menuWidth = 200;
-    const menuHeight = 100;
-    const { x, y } = gameState.ui.buildMenu.position;
-
-    // Draw menu background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(x, y, menuWidth, menuHeight);
-
-    // Set text alignment to center
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // Draw menu title
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 16px Arial';
-    ctx.fillText('Build Menu', x + menuWidth / 2, y + 25);
-
-    // Draw build option
-    ctx.font = '14px Arial';
-    const canAffordKnight = gameState.resources.Carrot.amount >= gameState.config.costs.knight;
-    ctx.fillStyle = canAffordKnight ? 'white' : 'gray';
-    ctx.fillText(`Build Knight (${gameState.config.costs.knight} Carrots)`, x + menuWidth / 2, y + 50);
-
-    // Draw close button
-    ctx.fillStyle = 'white';
-    ctx.fillText('Close', x + menuWidth / 2, y + 75);
-
-    // Reset text alignment
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
 }
 
 function buildKnight(){
