@@ -1,4 +1,4 @@
-import { Tent } from './classes/Tent.js';
+import { Tent } from './classes/buildings/Tent.js';
 import { Zharan } from './classes/Zharan.js';
 import { Knight } from './classes/Knight.js';
 import { gameState } from './systems/gameState.js';
