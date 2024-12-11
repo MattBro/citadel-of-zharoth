@@ -2,6 +2,7 @@ import { Tent } from './classes/Tent.js';
 import { Zharan } from './classes/Zharan.js';
 import { Knight } from './classes/Knight.js';
 import { gameState } from './systems/gameState.js';
+import { drawBackground } from './systems/renderer.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -29,20 +30,6 @@ gameState.units.push(zharan);
 gameState.events.on('resourceGathered', (data) => {
     gameState.resources[data.type].amount += data.amount;
 });
-
-function drawBackground() {
-    // Check if the image has loaded
-    if (gameState.images.background.complete) {
-        // Draw the image to fill the canvas
-        ctx.drawImage(gameState.images.background, 0, 0, gameState.canvas.width, gameState.canvas.height);
-    } else {
-        // If the image hasn't loaded yet, use a solid color as fallback
-        ctx.fillStyle = "green";
-        ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
-        // Add an event listener to redraw once the image loads
-        gameState.images.background.onload = () => requestAnimationFrame(gameLoop);
-    }
-}
 
 function drawGameState() {
     const padding = 10; // Padding for left and right sides of the text
