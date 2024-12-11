@@ -2,7 +2,7 @@ import { Tent } from './classes/Tent.js';
 import { Zharan } from './classes/Zharan.js';
 import { Knight } from './classes/Knight.js';
 import { gameState } from './systems/gameState.js';
-import { drawBackground, drawGameState, drawBuildMenu } from './systems/renderer.js';
+import { drawBackground, drawGameState, drawBuildMenu, drawGame } from './systems/renderer.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -35,22 +35,16 @@ gameState.events.on('resourceGathered', (data) => {
 });
 
 function gameLoop() {
-    ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
-    drawBackground();
-    
-    gameState.tent.draw(ctx);
-
-    gameState.resourceNodes.forEach(resource => resource.draw(ctx));
-
     const allObjects = [...gameState.resourceNodes, ...gameState.units, gameState.tent];
-
+    
+    // Update game state
     gameState.units.forEach(unit => {
         unit.move(allObjects);
-        unit.draw(ctx);
     });
 
-    drawGameState();
-    drawBuildMenu();
+    // Draw everything
+    drawGame();
+    
     requestAnimationFrame(gameLoop);
 }
 

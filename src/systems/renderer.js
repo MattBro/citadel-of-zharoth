@@ -58,3 +58,26 @@ export function drawBuildMenu() {
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
 }
+
+export function drawGame() {
+    const ctx = gameState.canvas.context;
+    
+    // Clear and draw background
+    ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+    drawBackground();
+    
+    // Draw tent
+    gameState.tent.draw(ctx);
+
+    // Draw resources
+    gameState.resourceNodes.forEach(resource => resource.draw(ctx));
+
+    // Draw units
+    gameState.units.forEach(unit => {
+        unit.draw(ctx);
+    });
+
+    // Draw UI elements
+    drawGameState();
+    drawBuildMenu();
+}
