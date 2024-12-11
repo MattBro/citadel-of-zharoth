@@ -2,13 +2,16 @@ import { Tent } from './classes/Tent.js';
 import { Zharan } from './classes/Zharan.js';
 import { Knight } from './classes/Knight.js';
 import { gameState } from './systems/gameState.js';
-import { drawBackground } from './systems/renderer.js';
+import { drawBackground, drawGameState } from './systems/renderer.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 // Store canvas context in gameState
 gameState.canvas.context = ctx;
+
+// Add background image load handler
+gameState.images.background.onload = () => requestAnimationFrame(gameLoop);
 
 const tent = new Tent(100, 100, 100, 100, gameState.images.tent);
 gameState.tent = tent;
@@ -30,26 +33,6 @@ gameState.units.push(zharan);
 gameState.events.on('resourceGathered', (data) => {
     gameState.resources[data.type].amount += data.amount;
 });
-
-function drawGameState() {
-    const padding = 10; // Padding for left and right sides of the text
-    const spacing = 20; // Spacing between resource counters
-    let x = padding; // Starting x position
-    const y = 10; // Y position for all counters
-
-    ctx.font = "bold 24px Arial";
-
-    const width = 100
-
-    Object.entries(gameState.resources).forEach(([resourceName, resource], index) => {
-        ctx.drawImage(resource.type.image, x, y, 20, 20);
-
-        ctx.fillText(resource.amount, 50+ x + padding, y + 20);
-
-        // Move x position for the next resource counter
-        x += width + padding * 2 + spacing;
-    });
-}
 
 function gameLoop() {
     ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
@@ -226,8 +209,6 @@ canvas.addEventListener('click', (event) => {
         openBuildMenu();
     }
 });
-
-gameLoop();
 
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection
