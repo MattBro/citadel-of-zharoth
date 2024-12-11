@@ -33,12 +33,6 @@ let showBuildMenu = false; // Flag to control the visibility of the build menu
 const tent = new Tent(100, 100, 100, 100, tentImage);
 gameState.tent = tent;
 
-const resources = [
-    new Resource(clayType, 600, 300, 1000),
-    new Resource(ironstoneType, 600, 500, 1000),
-    new Resource(carrotType, 400, 400, 1000)
-];
-
 const eventBus = {
     listeners: {},
     on(event, callback) {
@@ -112,18 +106,14 @@ function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
     
-    // Draw the tent
     gameState.tent.draw(ctx);
 
-    // Draw resources
-    resources.forEach(resource => resource.draw(ctx));
+    gameState.resourceNodes.forEach(resource => resource.draw(ctx));
 
-    // Combine all game objects for collision detection
-    const allObjects = [...resources, ...gameState.units, gameState.tent];
+    const allObjects = [...gameState.resourceNodes, ...gameState.units, gameState.tent];
 
-    // Move and draw units
     gameState.units.forEach(unit => {
-        unit.move(allObjects);  // Pass all objects to check for collision
+        unit.move(allObjects);
         unit.draw(ctx);
     });
 
@@ -232,7 +222,7 @@ canvas.addEventListener('contextmenu', (event) => {
         console.log("Moving unit to:", mouseX, mouseY);
         gameState.selectedUnit.setTarget(mouseX, mouseY);
 
-        for (const resource of resources) {
+        for (const resource of gameState.resourceNodes) {
             if (resource.isPointInside(mouseX, mouseY)) {
                 if (gameState.selectedUnit) {
                     gameState.selectedUnit.gatheringFrom = resource;
