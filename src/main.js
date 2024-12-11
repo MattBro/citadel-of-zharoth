@@ -55,8 +55,6 @@ function drawGameState() {
     const width = 100
 
     Object.entries(gameState.resources).forEach(([resourceName, resource], index) => {
-
-
         ctx.drawImage(resource.type.image, x, y, 20, 20);
 
         ctx.fillText(resource.amount, 50+ x + padding, y + 20);
@@ -96,7 +94,6 @@ function drawBuildMenu() {
     
     const menuWidth = 200;
     const menuHeight = 100;
-    const padding = 10;
     const { x, y } = gameState.ui.buildMenu.position;
 
     // Draw menu background
