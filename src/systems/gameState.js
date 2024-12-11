@@ -43,5 +43,10 @@ export const gameState = {
             }
         }
     },
-    events: eventBus
+    events: eventBus,
+    config: {
+        costs: {
+            knight: 1
+        }
+    }
 };

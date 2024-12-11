@@ -135,9 +135,9 @@ function drawBuildMenu() {
 
     // Draw build option
     ctx.font = '14px Arial';
-    const canAffordKnight = gameState.resources.Carrot.amount >= knightCost;
+    const canAffordKnight = gameState.resources.Carrot.amount >= gameState.config.costs.knight;
     ctx.fillStyle = canAffordKnight ? 'white' : 'gray';
-    ctx.fillText(`Build Knight (${knightCost} Carrots)`, x + menuWidth / 2, y + 50);
+    ctx.fillText(`Build Knight (${gameState.config.costs.knight} Carrots)`, x + menuWidth / 2, y + 50);
 
     // Draw close button
     ctx.fillStyle = 'white';
@@ -150,7 +150,7 @@ function drawBuildMenu() {
 
 function buildKnight(){
     console.log("building knight")
-    gameState.resources.Carrot.amount -= knightCost;
+    gameState.resources.Carrot.amount -= gameState.config.costs.knight;
     const knight = new Knight(tent.x + tent.width/2, tent.y + tent.height, knightImage, canvas.width, canvas.height);
     gameState.units.push(knight)
 }
@@ -158,9 +158,7 @@ function buildKnight(){
 
 // Add this function to handle clicks on the build menu
 function handleBuildMenuClick(mouseX, mouseY) {
-    if (!gameState.ui.buildMenu.isOpen) {
-        return;
-    }
+    if (!gameState.ui.buildMenu.isOpen) return;
 
     const menuWidth = 200;
     const menuHeight = 100;
@@ -171,7 +169,7 @@ function handleBuildMenuClick(mouseX, mouseY) {
         console.log("clicked menu");
         
         if (mouseY >= y + padding + 24 && mouseY <= y + padding + 48) {
-            if (gameState.resources.Carrot.amount >= knightCost) {
+            if (gameState.resources.Carrot.amount >= gameState.config.costs.knight) {
                 buildKnight();
             }
         }
