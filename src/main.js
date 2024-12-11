@@ -1,18 +1,13 @@
 import { Tent } from './classes/Tent.js';
-import { Resource } from './classes/Resource.js';
-import { ResourceType } from './classes/ResourceType.js';
 import { Zharan } from './classes/Zharan.js';
 import { Knight } from './classes/Knight.js';
 import { gameState } from './systems/gameState.js';
-import { clayType, ironstoneType, carrotType } from './systems/gameState.js';
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 // Store canvas context in gameState
 gameState.canvas.context = ctx;
-
-const knightCost = 1; // Set the cost for a knight
 
 const tent = new Tent(100, 100, 100, 100, gameState.images.tent);
 gameState.tent = tent;
@@ -263,13 +258,3 @@ function isTentClicked(mouseX, mouseY) {
     return mouseX >= tentX && mouseX <= tentX + tentWidth &&
            mouseY >= tentY && mouseY <= tentY + tentHeight;
 }
-
-
-
-
-
-
-
-
-
-
