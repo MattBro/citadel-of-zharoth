@@ -18,5 +18,14 @@ export const gameState = {
     ],
     units: [],
     selectedUnit: null,
-    tent: null
+    tent: null,
+    ui: {
+        buildMenu: {
+            isOpen: false,
+            position: {
+                x: 100,
+                y: 700
+            }
+        }
+    }
 };
