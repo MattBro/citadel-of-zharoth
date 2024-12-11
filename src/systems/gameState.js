@@ -46,7 +46,12 @@ export const gameState = {
     events: eventBus,
     config: {
         costs: {
-            knight: 1
+            knight: 5
         }
+    },
+    canvas: {
+        width: 1000,
+        height: 800,
+        context: null
     }
 };

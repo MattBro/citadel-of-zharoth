@@ -9,6 +9,9 @@ import { clayType, ironstoneType, carrotType } from './systems/gameState.js';
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// Store canvas context in gameState
+gameState.canvas.context = ctx;
+
 // At the top of your file, add this line to create an Image object
 const backgroundImage = new Image();
 backgroundImage.src = 'grassy-background.png'; // Remove the '@' symbol
@@ -37,8 +40,8 @@ const zharan = new Zharan(
     gameState.tent.x + gameState.tent.width/2,
     gameState.tent.y + gameState.tent.height + 20,
     zharanImage,
-    canvas.width,
-    canvas.height,
+    gameState.canvas.width,
+    gameState.canvas.height,
     gameState.tent,
     gameState.events
 );
@@ -55,11 +58,11 @@ function drawBackground() {
     // Check if the image has loaded
     if (backgroundImage.complete) {
         // Draw the image to fill the canvas
-        ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(backgroundImage, 0, 0, gameState.canvas.width, gameState.canvas.height);
     } else {
         // If the image hasn't loaded yet, use a solid color as fallback
         ctx.fillStyle = "green";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
         // Add an event listener to redraw once the image loads
         backgroundImage.onload = () => requestAnimationFrame(gameLoop);
     }
@@ -88,7 +91,7 @@ function drawGameState() {
 }
 
 function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
     drawBackground();
     
     gameState.tent.draw(ctx);
@@ -151,7 +154,13 @@ function drawBuildMenu() {
 function buildKnight(){
     console.log("building knight")
     gameState.resources.Carrot.amount -= gameState.config.costs.knight;
-    const knight = new Knight(tent.x + tent.width/2, tent.y + tent.height, knightImage, canvas.width, canvas.height);
+    const knight = new Knight(
+        gameState.tent.x + gameState.tent.width/2, 
+        gameState.tent.y + gameState.tent.height, 
+        knightImage, 
+        gameState.canvas.width,
+        gameState.canvas.height
+    );
     gameState.units.push(knight)
 }
 
