@@ -12,34 +12,15 @@ const ctx = canvas.getContext("2d");
 // Store canvas context in gameState
 gameState.canvas.context = ctx;
 
-// At the top of your file, add this line to create an Image object
-const backgroundImage = new Image();
-backgroundImage.src = 'grassy-background.png'; // Remove the '@' symbol
-
-// At the top of your file, add this line to create an Image object for Zharan
-const zharanImage = new Image();
-zharanImage.src = 'zharan.png';
-
-const knightImage = new Image();
-knightImage.src = 'knight.png';
-
-// At the top of your file, add this line to create an Image object for the tent
-const tentImage = new Image();
-tentImage.src = 'tent.png';
-
-// At the top of your file, add this line to create an Image object for the clay
-const clayImage = new Image();
-clayImage.src = 'clay.png';
-
 const knightCost = 1; // Set the cost for a knight
 
-const tent = new Tent(100, 100, 100, 100, tentImage);
+const tent = new Tent(100, 100, 100, 100, gameState.images.tent);
 gameState.tent = tent;
 
 const zharan = new Zharan(
     gameState.tent.x + gameState.tent.width/2,
     gameState.tent.y + gameState.tent.height + 20,
-    zharanImage,
+    gameState.images.zharan,
     gameState.canvas.width,
     gameState.canvas.height,
     gameState.tent,
@@ -56,15 +37,15 @@ gameState.events.on('resourceGathered', (data) => {
 
 function drawBackground() {
     // Check if the image has loaded
-    if (backgroundImage.complete) {
+    if (gameState.images.background.complete) {
         // Draw the image to fill the canvas
-        ctx.drawImage(backgroundImage, 0, 0, gameState.canvas.width, gameState.canvas.height);
+        ctx.drawImage(gameState.images.background, 0, 0, gameState.canvas.width, gameState.canvas.height);
     } else {
         // If the image hasn't loaded yet, use a solid color as fallback
         ctx.fillStyle = "green";
         ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
         // Add an event listener to redraw once the image loads
-        backgroundImage.onload = () => requestAnimationFrame(gameLoop);
+        gameState.images.background.onload = () => requestAnimationFrame(gameLoop);
     }
 }
 
@@ -157,7 +138,7 @@ function buildKnight(){
     const knight = new Knight(
         gameState.tent.x + gameState.tent.width/2, 
         gameState.tent.y + gameState.tent.height, 
-        knightImage, 
+        gameState.images.knight,
         gameState.canvas.width,
         gameState.canvas.height
     );
@@ -268,12 +249,6 @@ canvas.addEventListener('click', (event) => {
 });
 
 gameLoop();
-
-// Add error handling for the image load
-backgroundImage.onerror = function() {
-    console.error("Error loading the background image");
-    // You might want to set a flag here to prevent further attempts to load the image
-};
 
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection

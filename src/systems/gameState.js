@@ -53,5 +53,24 @@ export const gameState = {
         width: 1000,
         height: 800,
         context: null
+    },
+    images: {
+        background: new Image(),
+        zharan: new Image(),
+        knight: new Image(),
+        tent: new Image(),
+        clay: new Image()
     }
 };
+
+// Initialize images
+gameState.images.background.src = '/grassy-background.png';
+gameState.images.zharan.src = '/zharan.png';
+gameState.images.knight.src = '/knight.png';
+gameState.images.tent.src = '/tent.png';
+gameState.images.clay.src = '/clay.png';
+
+// Add error handlers
+Object.entries(gameState.images).forEach(([name, img]) => {
+    img.onerror = () => console.error(`Error loading image: ${name}`);
+});
