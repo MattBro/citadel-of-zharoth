@@ -7,7 +7,6 @@ export function drawBackground() {
     } else {
         ctx.fillStyle = "green";
         ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
-        gameState.images.background.onload = () => requestAnimationFrame(gameLoop);
     }
 }
 
