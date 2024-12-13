@@ -1,4 +1,5 @@
 import { Unit } from './Unit.js';
+import { gameState } from '../../systems/gameState.js';
 
 export class Zharan extends Unit {
     constructor(x, y, image, canvasWidth, canvasHeight, tent, eventBus) {

@@ -1,5 +1,5 @@
 import { Unit } from './Unit.js';
-import { gameState } from '../systems/gameState.js';
+import { gameState } from '../../systems/gameState.js';
 
 export class Knight extends Unit {
     constructor(x, y, image, canvasWidth, canvasHeight) {

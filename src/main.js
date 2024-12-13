@@ -1,6 +1,6 @@
-import { Tent } from './classes/buildings/Tent.js';
-import { Zharan } from './classes/Zharan.js';
-import { Knight } from './classes/Knight.js';
+import { Tent } from './entities/buildings/Tent.js';
+import { Zharan } from './entities/units/Zharan.js';
+import { Knight } from './entities/units/Knight.js';
 import { gameState } from './systems/gameState.js';
 import { drawBackground, drawGameState, drawBuildMenu, drawGame } from './systems/renderer.js';
 

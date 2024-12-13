@@ -1,4 +1,4 @@
-import { GameObject } from './GameObject.js';
+import { GameObject } from '../base/GameObject.js';
 
 export class Unit extends GameObject {
     constructor(type, x, y, speed, image, canvasWidth, canvasHeight, selected = false) {

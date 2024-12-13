@@ -1,4 +1,4 @@
-import { GameObject } from '../GameObject.js';
+import { GameObject } from '../base/GameObject.js';
 
 export class Tent extends GameObject {
     constructor(x, y, width, height, tentImage) {

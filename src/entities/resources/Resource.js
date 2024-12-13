@@ -1,4 +1,4 @@
-import { GameObject } from './GameObject.js';
+import { GameObject } from '../base/GameObject.js';
 
 export class Resource extends GameObject {
     constructor(resourceType, x, y, amount) {

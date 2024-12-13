@@ -1,5 +1,5 @@
-import { ResourceType } from "../classes/ResourceType.js";
-import { Resource } from "../classes/Resource.js";
+import { ResourceType } from "../entities/resources/ResourceType.js";
+import { Resource } from "../entities/resources/Resource.js";
 
 export const clayType = new ResourceType("Clay", "clay.png");
 export const ironstoneType = new ResourceType("Ironstone", "ironstone.png")
