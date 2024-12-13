@@ -13,7 +13,11 @@ gameState.canvas.context = ctx;
 // Add background image load handler
 gameState.images.background.onload = () => requestAnimationFrame(gameLoop);
 
-const tent = new Tent(100, 100, 100, 100, gameState.images.tent);
+const tent = new Tent({
+    position: { x: 100, y: 100 },
+    size: { width: 100, height: 100 },
+    image: gameState.images.tent
+});
 gameState.tent = tent;
 
 const zharan = new Zharan(

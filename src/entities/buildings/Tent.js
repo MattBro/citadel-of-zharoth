@@ -1,9 +1,10 @@
 import { GameObject } from '../base/GameObject.js';
 
 export class Tent extends GameObject {
-    constructor(x, y, width, height, tentImage) {
-        super(x, y, width, height);
-        this.image = tentImage;
+    constructor(config) {
+        const { position, size, image } = config;
+        super(position.x, position.y, size.width, size.height);
+        this.image = image;
     }
     
     draw(ctx) {
