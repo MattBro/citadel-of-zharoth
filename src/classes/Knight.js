@@ -1,8 +1,9 @@
 import { Unit } from './Unit.js';
+import { gameState } from '../systems/gameState.js';
 
 export class Knight extends Unit {
     constructor(x, y, image, canvasWidth, canvasHeight) {
-        super('Knight', x, y, 3, image, canvasWidth, canvasHeight); // Knights move at speed 3
+        super('Knight', x, y, gameState.config.unitSpeeds.knight, image, canvasWidth, canvasHeight);
         this.attackRange = 50;
         this.attackDamage = 10;
         this.lastAttackTime = 0;

@@ -2,7 +2,7 @@ import { Unit } from './Unit.js';
 
 export class Zharan extends Unit {
     constructor(x, y, image, canvasWidth, canvasHeight, tent, eventBus) {
-        super('zharan', x, y, 1, image, canvasWidth, canvasHeight);
+        super('zharan', x, y, 5, image, canvasWidth, canvasHeight);
         this.carrying = {
             type: null,
             amount: 0

@@ -46,7 +46,11 @@ export const gameState = {
     events: eventBus,
     config: {
         costs: {
-            knight: 5
+            knight: 1
+        },
+        unitSpeeds: {
+            zharan: 5,
+            knight: 3
         }
     },
     canvas: {
