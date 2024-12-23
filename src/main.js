@@ -139,27 +139,14 @@ canvas.addEventListener('click', (event) => {
     const mouseY = event.clientY - rect.top;
 
     console.log("Left click detected");
-    const clickedZharan = gameState.units.find(unit => unit instanceof Zharan && 
-        Math.abs(mouseX - unit.x) < 20 && Math.abs(mouseY - unit.y) < 20);
-
-    const clickedKnight = gameState.units.find(unit => unit instanceof Knight && 
-        Math.abs(mouseX - unit.x) < 20 && Math.abs(mouseY - unit.y) < 20);
+    const clickedZharan = findClickedUnit(Zharan, mouseX, mouseY);
+    const clickedKnight = findClickedUnit(Knight, mouseX, mouseY);
 
     if (clickedZharan) {
-        console.log("Zharan clicked");
-        if (gameState.selectedUnit) {
-            gameState.selectedUnit.selected = false;
-        }
-        gameState.selectedUnit = clickedZharan;
-        gameState.selectedUnit.selected = true;
+        handleUnitClick(clickedZharan);
         return;
     } else if (clickedKnight) {
-        console.log("Knight clicked");
-        if (gameState.selectedUnit) {
-            gameState.selectedUnit.selected = false;
-        }
-        gameState.selectedUnit = clickedKnight;
-        gameState.selectedUnit.selected = true;
+        handleUnitClick(clickedKnight);
         return;
     }
 
@@ -172,6 +159,20 @@ canvas.addEventListener('click', (event) => {
         openBuildMenu();
     }
 });
+
+function findClickedUnit(unitType, mouseX, mouseY) {
+    return gameState.units.find(unit => unit instanceof unitType && 
+        Math.abs(mouseX - unit.x) < 20 && Math.abs(mouseY - unit.y) < 20);
+}
+
+function handleUnitClick(clickedUnit) {
+    console.log(`${clickedUnit.constructor.name} clicked`);
+    if (gameState.selectedUnit) {
+        gameState.selectedUnit.selected = false;
+    }
+    gameState.selectedUnit = clickedUnit;
+    gameState.selectedUnit.selected = true;
+}
 
 // You might want to adjust Zharan's properties to account for the image size
 zharan.radius = 16; // Adjust this if needed for collision detection
