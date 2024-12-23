@@ -8,6 +8,7 @@ export class Knight extends Unit {
         this.attackDamage = 10;
         this.lastAttackTime = 0;
         this.attackSpeed = 1000; // Attack cooldown in milliseconds
+        this.selected = false;
     }
 
     gatherResource() {
@@ -24,4 +25,21 @@ export class Knight extends Unit {
         super.draw(ctx);
         // You could add knight-specific visual effects here
     }
-} 
+
+    isWithinSelection(startX, startY, endX, endY) {
+        return (this.x >= Math.min(startX, endX) && this.x <= Math.max(startX, endX) &&
+                this.y >= Math.min(startY, endY) && this.y <= Math.max(startY, endY));
+    }
+
+    select() {
+        this.selected = true;
+    }
+
+    deselect() {
+        this.selected = false;
+    }
+
+    isSelected() {
+        return this.selected;
+    }
+}

@@ -131,6 +131,68 @@ canvas.addEventListener('contextmenu', (event) => {
     return;
 });
 
+let isSelecting = false;
+let startX, startY, selectionBox;
+
+function initSelection() {
+    const canvas = document.getElementById('gameCanvas'); 
+    canvas.addEventListener('mousedown', startSelection);
+    canvas.addEventListener('mousemove', drawSelection);
+    canvas.addEventListener('mouseup', endSelection);
+}
+
+function startSelection(e) {
+    isSelecting = true;
+    startX = e.offsetX;
+    startY = e.offsetY;
+    selectionBox = document.createElement('div');
+    selectionBox.style.position = 'absolute';
+    selectionBox.style.border = '1px dashed #000';
+    selectionBox.style.backgroundColor = 'rgba(0, 0, 255, 0.3)';
+    document.body.appendChild(selectionBox);
+}
+
+function drawSelection(e) {
+    if (!isSelecting) return;
+    const currentX = e.offsetX;
+    const currentY = e.offsetY;
+    const width = currentX - startX;
+    const height = currentY - startY;
+    selectionBox.style.left = `${Math.min(startX, currentX)}px`;
+    selectionBox.style.top = `${Math.min(startY, currentY)}px`;
+    selectionBox.style.width = `${Math.abs(width)}px`;
+    selectionBox.style.height = `${Math.abs(height)}px`;
+}
+
+function endSelection(e) {
+    isSelecting = false;
+    document.body.removeChild(selectionBox);
+    const selectedKnights = getSelectedKnights(startX, startY, e.offsetX, e.offsetY);
+    
+    // Set selected state for the identified knights
+    selectedKnights.forEach(knight => {
+        knight.selected = true;
+    });
+
+    // Optional: Trigger a redraw or update to show selected knights visually
+}
+
+function getSelectedKnights(startX, startY, endX, endY) {
+    // Logic to determine which knights are within the selection box
+    // This will likely involve checking each knight's position
+    const selectedKnights = gameState.units.filter(unit => {
+        if (unit instanceof Knight) {
+            const unitX = unit.x;
+            const unitY = unit.y;
+            return unitX >= Math.min(startX, endX) && unitX <= Math.max(startX, endX) &&
+                   unitY >= Math.min(startY, endY) && unitY <= Math.max(startY, endY);
+        }
+        return false;
+    });
+    return selectedKnights;
+}
+
+initSelection();
 
 // Existing click event listener
 canvas.addEventListener('click', (event) => {
