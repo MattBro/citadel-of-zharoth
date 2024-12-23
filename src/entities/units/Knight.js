@@ -9,6 +9,8 @@ export class Knight extends Unit {
         this.lastAttackTime = 0;
         this.attackSpeed = 1000; // Attack cooldown in milliseconds
         this.selected = false;
+        this.targetX = null;
+        this.targetY = null;
     }
 
     gatherResource() {
@@ -41,5 +43,25 @@ export class Knight extends Unit {
 
     isSelected() {
         return this.selected;
+    }
+
+    moveToTarget() {
+        if (this.targetX !== null && this.targetY !== null) {
+            const dx = this.targetX - this.x;
+            const dy = this.targetY - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Move towards the target at a constant speed
+            if (distance > 1) { // Prevent overshooting
+                this.x += (dx / distance) * this.speed; // Assuming speed is defined
+                this.y += (dy / distance) * this.speed;
+            } else {
+                // Reached the target
+                this.x = this.targetX;
+                this.y = this.targetY;
+                this.targetX = null; // Reset target
+                this.targetY = null; // Reset target
+            }
+        }
     }
 }

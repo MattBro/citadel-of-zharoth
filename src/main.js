@@ -131,6 +131,24 @@ canvas.addEventListener('contextmenu', (event) => {
     return;
 });
 
+canvas.addEventListener('contextmenu', (event) => {
+    event.preventDefault(); // Prevent the default context menu from appearing
+    const clickX = event.offsetX;
+    const clickY = event.offsetY;
+    moveSelectedKnights(clickX, clickY);
+});
+
+function moveSelectedKnights(targetX, targetY) {
+    // Loop through all units and set target position for selected knights
+    gameState.units.forEach(unit => {
+        if (unit instanceof Knight && unit.isSelected()) {
+            unit.targetX = targetX; // Set the knight's target x position
+            unit.targetY = targetY; // Set the knight's target y position
+            unit.moveToTarget(); // Call a method to handle movement towards the target
+        }
+    });
+}
+
 let isSelecting = false;
 let startX, startY, selectionBox;
 
