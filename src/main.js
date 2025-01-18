@@ -90,6 +90,11 @@ function gameLoop() {
         unit.move(allObjects);
     });
 
+    // Update monster
+    if (gameState.monster) {
+        gameState.monster.update(deltaTime);
+    }
+
     // Draw everything
     drawGame();
     drawCountdownTimer();

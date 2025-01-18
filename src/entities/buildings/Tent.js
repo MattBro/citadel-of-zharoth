@@ -5,6 +5,13 @@ export class Tent extends GameObject {
         const { position, size, image } = config;
         super(position.x, position.y, size.width, size.height);
         this.image = image;
+        this.maxHealth = 500;
+        this.health = this.maxHealth;
+    }
+    
+    takeDamage(amount) {
+        this.health = Math.max(0, this.health - amount);
+        return this.health <= 0;
     }
     
     draw(ctx) {
@@ -15,5 +22,18 @@ export class Tent extends GameObject {
             ctx.fillStyle = "brown";
             ctx.fillRect(this.x, this.y, this.width, this.height);
         }
+        
+        // Draw health bar
+        const barWidth = this.width;
+        const barHeight = 10;
+        const healthPercent = this.health / this.maxHealth;
+        
+        // Background
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.x, this.y - 20, barWidth, barHeight);
+        
+        // Health
+        ctx.fillStyle = "green";
+        ctx.fillRect(this.x, this.y - 20, barWidth * healthPercent, barHeight);
     }
-} 
+}
