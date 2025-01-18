@@ -247,11 +247,14 @@ function findClickedUnit(unitType, mouseX, mouseY) {
 
 function handleUnitClick(clickedUnit) {
     console.log(`${clickedUnit.constructor.name} clicked`);
-    if (gameState.selectedUnit) {
-        gameState.selectedUnit.selected = false;
-    }
+    // Deselect all units first
+    gameState.units.forEach(unit => {
+        if (unit.selected) {
+            unit.selected = false;
+        }
+    });
     gameState.selectedUnit = clickedUnit;
-    gameState.selectedUnit.selected = true;
+    clickedUnit.selected = true;
 }
 
 // You might want to adjust Zharan's properties to account for the image size
