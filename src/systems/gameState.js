@@ -57,6 +57,7 @@ export const gameState = {
         countdown: 60,
         lastTime: performance.now()
     },
+    monster: null,
     canvas: {
         width: 1000,
         height: 800,
@@ -67,7 +68,8 @@ export const gameState = {
         zharan: new Image(),
         knight: new Image(),
         tent: new Image(),
-        clay: new Image()
+        clay: new Image(),
+        monster: new Image()
     }
 };
 
@@ -77,6 +79,7 @@ gameState.images.zharan.src = '/zharan.png';
 gameState.images.knight.src = '/knight.png';
 gameState.images.tent.src = '/tent.png';
 gameState.images.clay.src = '/clay.png';
+gameState.images.monster.src = '/monster.png';
 
 // Add error handlers
 Object.entries(gameState.images).forEach(([name, img]) => {

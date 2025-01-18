@@ -76,21 +76,32 @@ export function drawCountdownTimer() {
 export function drawGame() {
     const ctx = gameState.canvas.context;
     
-    // Clear and draw background
+    // Clear the canvas
     ctx.clearRect(0, 0, gameState.canvas.width, gameState.canvas.height);
+    
+    // Draw background
     drawBackground();
     
+    // Draw resource nodes
+    gameState.resourceNodes.forEach(node => {
+        node.draw(ctx);
+    });
+    
     // Draw tent
-    gameState.tent.draw(ctx);
-
-    // Draw resources
-    gameState.resourceNodes.forEach(resource => resource.draw(ctx));
-
+    if (gameState.tent) {
+        gameState.tent.draw(ctx);
+    }
+    
     // Draw units
     gameState.units.forEach(unit => {
         unit.draw(ctx);
     });
 
+    // Draw monster if it exists
+    if (gameState.monster) {
+        gameState.monster.draw(ctx);
+    }
+    
     // Draw UI elements
     drawGameState();
     drawBuildMenu();

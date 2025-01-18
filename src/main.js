@@ -1,6 +1,7 @@
 import { Tent } from './entities/buildings/Tent.js';
 import { Zharan } from './entities/units/Zharan.js';
 import { Knight } from './entities/units/Knight.js';
+import { Monster } from './entities/units/Monster.js';
 import { gameState } from './systems/gameState.js';
 import { drawBackground, drawGameState, drawBuildMenu, drawGame } from './systems/renderer.js';
 
@@ -9,6 +10,10 @@ const ctx = canvas.getContext("2d");
 
 // Store canvas context in gameState
 gameState.canvas.context = ctx;
+
+// Load monster image
+gameState.images.monster = new Image();
+gameState.images.monster.src = 'monster.png';
 
 // Add background image load handler
 gameState.images.background.onload = () => requestAnimationFrame(gameLoop);
@@ -40,7 +45,7 @@ gameState.events.on('resourceGathered', (data) => {
 
 // Initialize countdown timer
 gameState.timer = {
-    countdown: 60,
+    countdown: 5,
     lastTime: performance.now()
 };
 
@@ -63,10 +68,19 @@ function gameLoop() {
     const currentTime = performance.now();
     const deltaTime = (currentTime - gameState.timer.lastTime) / 1000; // Convert to seconds
     gameState.timer.lastTime = currentTime;
-
+    
     // Update countdown
     if (gameState.timer.countdown > 0) {
         gameState.timer.countdown -= deltaTime;
+        
+        // Spawn monster when timer hits 0
+        if (gameState.timer.countdown <= 0) {
+            gameState.monster = new Monster(
+                gameState.canvas.width - 100,  // x position (right side)
+                gameState.canvas.height - 100, // y position (bottom)
+                gameState.images.monster
+            );
+        }
     }
 
     const allObjects = [...gameState.resourceNodes, ...gameState.units, gameState.tent];
