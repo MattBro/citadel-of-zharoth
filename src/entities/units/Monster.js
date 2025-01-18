@@ -148,7 +148,14 @@ export class Monster extends Unit {
 
     takeDamage(amount) {
         this.health = Math.max(0, this.health - amount);
+        if (this.health <= 0) {
+            this.onDeath();
+        }
         return this.health <= 0;
+    }
+
+    onDeath() {
+        gameState.monster = null;
     }
 
     draw(ctx) {

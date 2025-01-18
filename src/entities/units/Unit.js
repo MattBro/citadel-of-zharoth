@@ -1,4 +1,5 @@
 import { GameObject } from '../base/GameObject.js';
+import { gameState } from '../../systems/gameState.js';
 
 export class Unit extends GameObject {
     constructor(type, x, y, speed, image, canvasWidth, canvasHeight, selected = false) {
@@ -149,6 +150,14 @@ export class Unit extends GameObject {
                 this.x - this.width / 2 + radius, this.y - this.height / 2);
             ctx.stroke();
             ctx.shadowBlur = 0;
+        }
+    }
+
+    onDeath() {
+        // Remove unit from game state
+        const index = gameState.units.indexOf(this);
+        if (index > -1) {
+            gameState.units.splice(index, 1);
         }
     }
 

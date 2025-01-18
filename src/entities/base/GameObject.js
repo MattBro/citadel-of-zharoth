@@ -4,12 +4,27 @@ export class GameObject {
         this.y = y;
         this.width = width;
         this.height = height;
+        this.maxHealth = 10;
+        this.health = this.maxHealth;
     }
 
-    isColliding(otherObject, buffer = 0) {
-        return !(this.x + this.width + buffer < otherObject.x ||
-                 this.x - buffer > otherObject.x + otherObject.width ||
-                 this.y + this.height + buffer < otherObject.y ||
-                 this.y - buffer > otherObject.y + otherObject.height);
+    takeDamage(amount) {
+        this.health = Math.max(0, this.health - amount);
+        if (this.health <= 0) {
+            this.onDeath();
+        }
+        return this.health <= 0;
     }
-} 
+
+    // Override this in child classes to handle death
+    onDeath() {
+        // Base class does nothing
+    }
+
+    isColliding(obj1, obj2) {
+        return !(obj1.x + obj1.width < obj2.x ||
+                obj1.x > obj2.x + obj2.width ||
+                obj1.y + obj1.height < obj2.y ||
+                obj1.y > obj2.y + obj2.height);
+    }
+}

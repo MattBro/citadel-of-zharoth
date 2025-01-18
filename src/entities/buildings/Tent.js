@@ -11,7 +11,16 @@ export class Tent extends GameObject {
     
     takeDamage(amount) {
         this.health = Math.max(0, this.health - amount);
+        if (this.health <= 0) {
+            this.onDeath();
+        }
         return this.health <= 0;
+    }
+    
+    onDeath() {
+        // Game over when tent dies
+        alert('Game Over - Your tent was destroyed!');
+        // Could add more game over logic here
     }
     
     draw(ctx) {

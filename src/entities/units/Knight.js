@@ -53,8 +53,7 @@ export class Knight extends Unit {
     }
 
     takeDamage(amount) {
-        this.health = Math.max(0, this.health - amount);
-        return this.health <= 0;
+        super.takeDamage(amount);
     }
 
     attack(target) {
