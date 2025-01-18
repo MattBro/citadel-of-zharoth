@@ -154,10 +154,6 @@ export class Monster extends Unit {
         return this.health <= 0;
     }
 
-    onDeath() {
-        gameState.monster = null;
-    }
-
     draw(ctx) {
         if (this.image && this.image.complete) {
             ctx.drawImage(

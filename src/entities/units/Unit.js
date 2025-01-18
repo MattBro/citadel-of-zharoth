@@ -78,7 +78,10 @@ export class Unit extends GameObject {
             const objDy = obj.y - this.y;
             const distanceToObj = Math.sqrt(objDx * objDx + objDy * objDy);
             
-            const safeDistance = (this.width + obj.width) / 2 + 10;
+            // Get the actual width of the object, accounting for size property
+            const objWidth = obj.size ? obj.size.width : obj.width;
+            const objHeight = obj.size ? obj.size.height : obj.height;
+            const safeDistance = (this.width + Math.max(objWidth, objHeight)) / 2 + 20;
     
             if (distanceToObj < avoidanceRadius) {
                 const avoidanceFactor = Math.pow((avoidanceRadius - distanceToObj) / avoidanceRadius, 2);
@@ -154,10 +157,17 @@ export class Unit extends GameObject {
     }
 
     onDeath() {
-        // Remove unit from game state
-        const index = gameState.units.indexOf(this);
-        if (index > -1) {
-            gameState.units.splice(index, 1);
+        // Remove unit from appropriate array in game state
+        if (this.type === 'monster') {
+            const index = gameState.monsters.indexOf(this);
+            if (index > -1) {
+                gameState.monsters.splice(index, 1);
+            }
+        } else {
+            const index = gameState.units.indexOf(this);
+            if (index > -1) {
+                gameState.units.splice(index, 1);
+            }
         }
     }
 

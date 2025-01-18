@@ -57,7 +57,7 @@ export const gameState = {
         countdown: 60,
         lastTime: performance.now()
     },
-    monster: null,
+    monsters: [],
     canvas: {
         width: 1000,
         height: 800,

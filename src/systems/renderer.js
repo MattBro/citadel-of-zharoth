@@ -19,9 +19,11 @@ export function drawGameState() {
     const width = 100;
 
     ctx.font = "bold 24px Arial";
+    ctx.fillStyle = "white";  // Set text color to white
 
     Object.entries(gameState.resources).forEach(([resourceName, resource], index) => {
         ctx.drawImage(resource.type.image, x, y, 20, 20);
+        ctx.fillStyle = "white";  // Ensure text stays white for each resource
         ctx.fillText(resource.amount, 50 + x + padding, y + 20);
         x += width + padding * 2 + spacing;
     });
@@ -97,10 +99,10 @@ export function drawGame() {
         unit.draw(ctx);
     });
 
-    // Draw monster if it exists
-    if (gameState.monster) {
-        gameState.monster.draw(ctx);
-    }
+    // Draw monsters
+    gameState.monsters.forEach(monster => {
+        monster.draw(ctx);
+    });
     
     // Draw UI elements
     drawGameState();

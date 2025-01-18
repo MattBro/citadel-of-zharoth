@@ -34,22 +34,18 @@ export class Knight extends Unit {
     }
 
     isInAttackRange(target) {
-        // Add a small buffer (5 pixels) to allow attack when just touching
-        const buffer = 5;
-        return this.isColliding(
-            {
-                x: this.x - this.width/2,
-                y: this.y - this.height/2,
-                width: this.width + buffer,
-                height: this.height + buffer
-            },
-            {
-                x: target.x - target.width/2,
-                y: target.y - target.height/2,
-                width: target.width,
-                height: target.height
-            }
-        );
+        // Add a larger buffer for attack range since monsters are big
+        const attackRange = 60;  // Increased attack range
+        const targetWidth = target.size ? target.size.width : target.width;
+        const targetHeight = target.size ? target.size.height : target.height;
+        
+        // Calculate centers
+        const dx = this.x - target.x;
+        const dy = this.y - target.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // If we're within attack range of the target's edge
+        return distance <= (targetWidth / 2) + attackRange;
     }
 
     takeDamage(amount) {
@@ -67,17 +63,22 @@ export class Knight extends Unit {
     }
 
     move(objects) {
-        if (gameState.monster) {
-            // If monster exists, check if we're in attack range
-            if (this.isInAttackRange(gameState.monster)) {
-                // Attack the monster
-                this.attack(gameState.monster);
-                return;
+        // Include monsters in the objects to check for collisions
+        const allObjects = [...objects, ...gameState.monsters];
+
+        if (gameState.monsters.length > 0) {
+            // Check for any nearby monsters
+            for (const monster of gameState.monsters) {
+                if (this.isInAttackRange(monster)) {
+                    // Attack the closest monster
+                    this.attack(monster);
+                    return;
+                }
             }
         }
 
-        // Otherwise, continue with normal movement
-        super.move(objects);
+        // Continue with normal movement, but use allObjects for collision checks
+        super.move(allObjects);
     }
 
     draw(ctx) {

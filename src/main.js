@@ -75,11 +75,12 @@ function gameLoop() {
         
         // Spawn monster when timer hits 0
         if (gameState.timer.countdown <= 0) {
-            gameState.monster = new Monster(
+            const monster = new Monster(
                 gameState.canvas.width - 100,  // x position (right side)
                 gameState.canvas.height - 100, // y position (bottom)
                 gameState.images.monster
             );
+            gameState.monsters.push(monster);
         }
     }
 
@@ -90,10 +91,10 @@ function gameLoop() {
         unit.move(allObjects);
     });
 
-    // Update monster
-    if (gameState.monster) {
-        gameState.monster.update(deltaTime);
-    }
+    // Update monsters
+    gameState.monsters.forEach(monster => {
+        monster.update(deltaTime);
+    });
 
     // Draw everything
     drawGame();
