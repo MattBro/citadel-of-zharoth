@@ -81,6 +81,9 @@ function gameLoop() {
                 gameState.images.monster
             );
             gameState.monsters.push(monster);
+            
+            // Reset timer for next monster
+            gameState.timer.countdown = 5;  // Reset to 5 seconds
         }
     }
 
