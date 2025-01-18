@@ -51,16 +51,27 @@ export class Monster extends Unit {
     }
 
     update(deltaTime) {
-        // Move towards tent if not already there
-        const dx = gameState.tent.x - this.x;
-        const dy = gameState.tent.y - this.y;
+        // Calculate distance to tent center
+        const tentCenterX = gameState.tent.x + gameState.tent.width/2;
+        const tentCenterY = gameState.tent.y + gameState.tent.height/2;
+        const dx = tentCenterX - this.x;
+        const dy = tentCenterY - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        const attackRange = this.size.width/2;
+        // Attack range is 1.5x the monster's width
+        const attackRange = this.size.width * 1.5;
 
-        if (distance > attackRange) {
-            // Calculate new position
-            const speed = this.speed;
+        if (distance <= attackRange) {
+            // Close enough to attack
+            const now = performance.now();
+            const timeSinceLastAttack = (now - this.lastAttackTime) / 1000;
+            
+            if (timeSinceLastAttack >= 1) {
+                gameState.tent.takeDamage(this.attackDamage);
+                this.lastAttackTime = now;
+            }
+        } else {
+            // Try to move closer
             const angle = Math.atan2(dy, dx);
             
             // Try 8 different directions if direct path is blocked
@@ -77,8 +88,8 @@ export class Monster extends Unit {
 
             let moved = false;
             for (const dir of directions) {
-                const newX = this.x + Math.cos(dir) * speed;
-                const newY = this.y + Math.sin(dir) * speed;
+                const newX = this.x + Math.cos(dir) * this.speed;
+                const newY = this.y + Math.sin(dir) * this.speed;
 
                 // Check if new position would cause collision
                 if (!this.checkCollisions(newX, newY)) {
@@ -87,15 +98,6 @@ export class Monster extends Unit {
                     moved = true;
                     break;
                 }
-            }
-        } else {
-            // Attack tent
-            const now = performance.now();
-            const timeSinceLastAttack = (now - this.lastAttackTime) / 1000; // convert to seconds
-            
-            if (timeSinceLastAttack >= 1) { // Attack once per second
-                gameState.tent.takeDamage(this.attackDamage);
-                this.lastAttackTime = now;
             }
         }
     }
