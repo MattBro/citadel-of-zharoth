@@ -58,6 +58,21 @@ export function drawBuildMenu() {
     ctx.textBaseline = 'alphabetic';
 }
 
+export function drawCountdownTimer() {
+    const ctx = gameState.canvas.context;
+    ctx.save();
+    ctx.font = '24px Arial';
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 3;
+    const timerText = `${Math.ceil(gameState.timer.countdown)}`;
+    const x = gameState.canvas.width - 50;
+    const y = 40;
+    ctx.strokeText(timerText, x, y);
+    ctx.fillText(timerText, x, y);
+    ctx.restore();
+}
+
 export function drawGame() {
     const ctx = gameState.canvas.context;
     
@@ -79,4 +94,5 @@ export function drawGame() {
     // Draw UI elements
     drawGameState();
     drawBuildMenu();
+    drawCountdownTimer();
 }

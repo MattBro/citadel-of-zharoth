@@ -49,9 +49,13 @@ export const gameState = {
             knight: 1
         },
         unitSpeeds: {
-            zharan: 5,
-            knight: 3
+            knight: 2,
+            zharan: 3
         }
+    },
+    timer: {
+        countdown: 60,
+        lastTime: performance.now()
     },
     canvas: {
         width: 1000,

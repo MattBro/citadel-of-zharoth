@@ -38,7 +38,37 @@ gameState.events.on('resourceGathered', (data) => {
     gameState.resources[data.type].amount += data.amount;
 });
 
+// Initialize countdown timer
+gameState.timer = {
+    countdown: 60,
+    lastTime: performance.now()
+};
+
+function drawCountdownTimer() {
+    const ctx = gameState.canvas.context;
+    ctx.save();
+    ctx.font = '24px Arial';
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 3;
+    const timerText = `${Math.ceil(gameState.timer.countdown)}`;
+    const x = gameState.canvas.width - 50;
+    const y = 40;
+    ctx.strokeText(timerText, x, y);
+    ctx.fillText(timerText, x, y);
+    ctx.restore();
+}
+
 function gameLoop() {
+    const currentTime = performance.now();
+    const deltaTime = (currentTime - gameState.timer.lastTime) / 1000; // Convert to seconds
+    gameState.timer.lastTime = currentTime;
+
+    // Update countdown
+    if (gameState.timer.countdown > 0) {
+        gameState.timer.countdown -= deltaTime;
+    }
+
     const allObjects = [...gameState.resourceNodes, ...gameState.units, gameState.tent];
     
     // Update game state
@@ -48,6 +78,7 @@ function gameLoop() {
 
     // Draw everything
     drawGame();
+    drawCountdownTimer();
     
     requestAnimationFrame(gameLoop);
 }
