@@ -2,12 +2,14 @@ import { Unit } from './Unit.js';
 import { gameState } from '../../systems/gameState.js';
 
 export class Knight extends Unit {
-    constructor(x, y, image, canvasWidth, canvasHeight) {
+    constructor(x, y, image, canvasWidth, canvasHeight, tent) {
         super('Knight', x, y, gameState.config.unitSpeeds.knight, image, canvasWidth, canvasHeight);
-        this.attackRange = 50;
-        this.attackDamage = 10;
+        this.tent = tent;
+        this.maxHealth = 10;
+        this.health = this.maxHealth;
+        this.attackDamage = 5;
         this.lastAttackTime = 0;
-        this.attackSpeed = 1000; // Attack cooldown in milliseconds
+        this.attackRange = 50;
         this.selected = false;
         this.targetX = null;
         this.targetY = null;
@@ -23,9 +25,45 @@ export class Knight extends Unit {
         return;
     }
 
+    takeDamage(amount) {
+        this.health = Math.max(0, this.health - amount);
+        return this.health <= 0;
+    }
+
+    attack(target) {
+        const now = performance.now();
+        const timeSinceLastAttack = (now - this.lastAttackTime) / 1000;
+        
+        if (timeSinceLastAttack >= 1) {
+            target.takeDamage(this.attackDamage);
+            this.lastAttackTime = now;
+        }
+    }
+
     draw(ctx) {
         super.draw(ctx);
-        // You could add knight-specific visual effects here
+        // Draw health bar
+        const barWidth = 32;
+        const barHeight = 5;
+        const healthPercent = this.health / this.maxHealth;
+        
+        // Background
+        ctx.fillStyle = "red";
+        ctx.fillRect(
+            this.x - 16,
+            this.y - 25,
+            barWidth,
+            barHeight
+        );
+        
+        // Health
+        ctx.fillStyle = "green";
+        ctx.fillRect(
+            this.x - 16,
+            this.y - 25,
+            barWidth * healthPercent,
+            barHeight
+        );
     }
 
     isWithinSelection(startX, startY, endX, endY) {
@@ -43,6 +81,24 @@ export class Knight extends Unit {
 
     isSelected() {
         return this.selected;
+    }
+
+    move(objects) {
+        if (gameState.monster) {
+            // If monster exists, check if we're in attack range
+            const dx = gameState.monster.x - this.x;
+            const dy = gameState.monster.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance <= this.attackRange) {
+                // Attack the monster
+                this.attack(gameState.monster);
+                return;
+            }
+        }
+
+        // Otherwise, continue with normal movement
+        super.move(objects);
     }
 
     moveToTarget() {
