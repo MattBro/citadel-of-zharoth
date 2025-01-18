@@ -207,46 +207,66 @@ let isSelecting = false;
 let startX, startY, selectionBox;
 
 function initSelection() {
-    const canvas = document.getElementById('gameCanvas'); 
+    const canvas = document.getElementById('gameCanvas');
     canvas.addEventListener('mousedown', startSelection);
-    canvas.addEventListener('mousemove', drawSelection);
-    canvas.addEventListener('mouseup', endSelection);
+    // Move mousemove and mouseup to window level
+    window.addEventListener('mousemove', drawSelection);
+    window.addEventListener('mouseup', endSelection);
 }
 
 function startSelection(e) {
     isSelecting = true;
-    startX = e.offsetX;
-    startY = e.offsetY;
+    const rect = canvas.getBoundingClientRect();
+    startX = e.clientX - rect.left;
+    startY = e.clientY - rect.top;
     selectionBox = document.createElement('div');
     selectionBox.style.position = 'absolute';
     selectionBox.style.border = '1px dashed #000';
     selectionBox.style.backgroundColor = 'rgba(0, 0, 255, 0.3)';
+    selectionBox.style.pointerEvents = 'none'; // Prevent the box from interfering with mouse events
     document.body.appendChild(selectionBox);
 }
 
 function drawSelection(e) {
     if (!isSelecting) return;
-    const currentX = e.offsetX;
-    const currentY = e.offsetY;
-    const width = currentX - startX;
-    const height = currentY - startY;
-    selectionBox.style.left = `${Math.min(startX, currentX)}px`;
-    selectionBox.style.top = `${Math.min(startY, currentY)}px`;
+    
+    const canvas = document.getElementById('gameCanvas');
+    const rect = canvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+
+    // Constrain the selection box to the canvas boundaries
+    const boundedX = Math.max(0, Math.min(currentX, canvas.width));
+    const boundedY = Math.max(0, Math.min(currentY, canvas.height));
+
+    const width = boundedX - startX;
+    const height = boundedY - startY;
+    
+    selectionBox.style.left = `${rect.left + Math.min(startX, boundedX)}px`;
+    selectionBox.style.top = `${rect.top + Math.min(startY, boundedY)}px`;
     selectionBox.style.width = `${Math.abs(width)}px`;
     selectionBox.style.height = `${Math.abs(height)}px`;
 }
 
 function endSelection(e) {
+    if (!isSelecting) return;
+    
     isSelecting = false;
-    document.body.removeChild(selectionBox);
-    const selectedKnights = getSelectedKnights(startX, startY, e.offsetX, e.offsetY);
+    if (selectionBox && selectionBox.parentNode) {
+        document.body.removeChild(selectionBox);
+    }
+    
+    const canvas = document.getElementById('gameCanvas');
+    const rect = canvas.getBoundingClientRect();
+    const endX = Math.max(0, Math.min(e.clientX - rect.left, canvas.width));
+    const endY = Math.max(0, Math.min(e.clientY - rect.top, canvas.height));
+    
+    const selectedKnights = getSelectedKnights(startX, startY, endX, endY);
     
     // Set selected state for the identified knights
     selectedKnights.forEach(knight => {
         knight.selected = true;
     });
-
-    // Optional: Trigger a redraw or update to show selected knights visually
 }
 
 function getSelectedKnights(startX, startY, endX, endY) {
